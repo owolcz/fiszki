@@ -43,6 +43,7 @@
   .chip.f4.active{background:var(--c4); border-color:var(--c4); color:#fff;}
   .chip.f5.active{background:var(--c5); border-color:var(--c5); color:#fff;}
   .chip.hard.active{background:var(--bad); border-color:var(--bad); color:#fff;}
+  .chip.toggleKnown.active{background:var(--ok); border-color:var(--ok); color:#fff;}
 
   .progress-wrap{width:100%; max-width:720px; margin-bottom:6px;}
   .progress-bar{height:10px; background:#334155; border-radius:999px; overflow:hidden; display:flex;}
@@ -115,6 +116,7 @@
   <button class="chip f4" data-f="4">📡 STM — sieci mobilne (36)</button>
   <button class="chip f5" data-f="5">🌍 PPDP — dane przestrzenne (39)</button>
   <button class="chip hard" data-f="hard">❌ Tylko nieumiane</button>
+  <button class="chip toggleKnown" id="toggleKnown">🙈 Ukryj umiane</button>
 </div>
 
 <div class="progress-wrap">
@@ -306,11 +308,14 @@ const SRC = {1:"2024 · ISI", 2:"2015 · Kierunkowe", 3:"2014 · Mobile/KSG", 4:
 let filter = "all", deck = [], idx = 0;
 let marks = {};
 try { marks = JSON.parse(localStorage.getItem("fiszkiMarks") || "{}"); } catch(e) { marks = {}; }
+let hideKnown = false;
+try { hideKnown = localStorage.getItem("fiszkiHideKnown")==="1"; } catch(e) {}
 
 const card = document.getElementById("card");
 
 function buildDeck(){
   deck = DATA.map((d,i)=>i).filter(i=>{
+    if(hideKnown && marks[i]==="ok") return false;
     if(filter==="all") return true;
     if(filter==="hard") return marks[i]==="bad";
     return DATA[i].s===Number(filter);
@@ -357,7 +362,11 @@ function prev(){ if(deck.length){ idx=(idx-1+deck.length)%deck.length; render();
 function mark(v){
   if(!deck.length) return;
   marks[deck[idx]] = v; saveMarks();
-  if(filter==="hard" && v==="ok"){ buildDeck(); } else { next(); }
+  if(v==="ok" && (filter==="hard" || hideKnown)){
+    const keep = idx;
+    buildDeck();
+    if(deck.length){ idx = keep % deck.length; render(); }
+  } else { next(); }
 }
 
 card.addEventListener("click", ()=>card.classList.toggle("flipped"));
@@ -372,14 +381,22 @@ document.getElementById("shuf").onclick = ()=>{
 document.getElementById("reset").onclick = ()=>{
   if(confirm("Na pewno zresetować cały postęp?")){ marks={}; saveMarks(); buildDeck(); }
 };
-document.querySelectorAll(".chip").forEach(ch=>{
+document.querySelectorAll(".chip[data-f]").forEach(ch=>{
   ch.onclick = ()=>{
-    document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
+    document.querySelectorAll(".chip[data-f]").forEach(c=>c.classList.remove("active"));
     ch.classList.add("active");
     filter = ch.dataset.f;
     buildDeck();
   };
 });
+const tk = document.getElementById("toggleKnown");
+if(hideKnown) tk.classList.add("active");
+tk.onclick = ()=>{
+  hideKnown = !hideKnown;
+  tk.classList.toggle("active", hideKnown);
+  try{ localStorage.setItem("fiszkiHideKnown", hideKnown?"1":"0"); }catch(e){}
+  buildDeck();
+};
 document.addEventListener("keydown", e=>{
   if(e.code==="Space"){ e.preventDefault(); card.classList.toggle("flipped"); }
   else if(e.code==="ArrowRight") next();
