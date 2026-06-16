@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baza wiedzy — Obrona pracy magisterskiej | Oskar Wołcz</title>
+<style>
+:root{
+  --bg:#f4f6fb; --panel:#ffffff; --ink:#1d2433; --muted:#5b6b86; --line:#e2e8f3;
+  --p1:#e23b53; --p1soft:#fdecef; --p2:#2563eb; --p2soft:#e9f0ff; --p3:#7c3aed; --p3soft:#f1e9ff;
+  --accent:#0f766e; --accentsoft:#dcf5f0; --gold:#d9a400; --shadow:0 6px 24px rgba(20,30,60,.08);
+  --radius:14px;
+}
+[data-theme="dark"]{
+  --bg:#0e1320; --panel:#161d2e; --ink:#e8edf7; --muted:#9fb0cc; --line:#27304a;
+  --p1soft:#3a1b22; --p2soft:#16264a; --p3soft:#2a1c44; --accentsoft:#0d3a35; --shadow:0 6px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:var(--p2)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 18px}
+header.top{background:linear-gradient(135deg,#0f766e 0%,#155e9c 60%,#3b2f8f 100%);color:#fff;padding:30px 0 26px}
+header.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
+header.top h1{margin:0;font-size:1.5rem;letter-spacing:.2px}
+header.top p{margin:6px 0 0;opacity:.92;font-size:.95rem;max-width:640px}
+.htools{display:flex;gap:8px;align-items:center}
+.iconbtn{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:.85rem;font-weight:600}
+.iconbtn:hover{background:rgba(255,255,255,.28)}
+.stats{display:flex;gap:18px;margin-top:14px;flex-wrap:wrap}
+.stat{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:8px 14px;font-size:.82rem}
+.stat b{font-size:1.15rem;display:block;line-height:1.1}
+/* toolbar */
+.toolbar{position:sticky;top:0;z-index:40;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+.toolbar .wrap{padding:12px 18px}
+.modes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.mode{flex:0 0 auto;border:1px solid var(--line);background:transparent;color:var(--muted);padding:8px 16px;border-radius:999px;cursor:pointer;font-weight:600;font-size:.9rem}
+.mode.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.searchrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#search{flex:1 1 280px;min-width:220px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:.95rem}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer;font-size:.82rem;font-weight:600}
+.chip.active{color:#fff}
+.chip[data-p="all"].active{background:#334155;border-color:#334155}
+.chip[data-p="1"].active{background:var(--p1);border-color:var(--p1)}
+.chip[data-p="2"].active{background:var(--p2);border-color:var(--p2)}
+.chip[data-p="3"].active{background:var(--p3);border-color:var(--p3)}
+.chip.toggle.active{background:var(--gold);border-color:var(--gold);color:#3a2c00}
+select#cat{padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font-size:.85rem;font-weight:600;max-width:100%}
+/* content */
+main{padding:22px 0 70px}
+.catblock{margin-bottom:26px}
+.cathead{display:flex;align-items:center;gap:10px;margin:18px 0 10px;font-size:1.05rem;font-weight:700}
+.cathead .cnt{font-size:.78rem;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+.card{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:var(--radius);margin:10px 0;box-shadow:var(--shadow);overflow:hidden}
+.card.p1{border-left-color:var(--p1)} .card.p2{border-left-color:var(--p2)} .card.p3{border-left-color:var(--p3)}
+.card.known{opacity:.62}
+.qrow{display:flex;gap:12px;align-items:flex-start;padding:15px 16px;cursor:pointer}
+.qrow:hover{background:var(--bg)}
+.badge{flex:0 0 auto;font-size:.66rem;font-weight:800;letter-spacing:.4px;padding:3px 8px;border-radius:6px;text-transform:uppercase;margin-top:2px}
+.badge.p1{background:var(--p1soft);color:var(--p1)} .badge.p2{background:var(--p2soft);color:var(--p2)} .badge.p3{background:var(--p3soft);color:var(--p3)}
+.qtext{flex:1;font-weight:600;font-size:1rem}
+.qmeta{display:block;font-size:.74rem;color:var(--muted);font-weight:500;margin-top:3px}
+.qbtns{display:flex;gap:4px;flex:0 0 auto}
+.mini{border:1px solid var(--line);background:var(--bg);border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
+.mini.on-fav{color:var(--gold);border-color:var(--gold)}
+.mini.on-known{color:var(--accent);border-color:var(--accent)}
+.answer{display:none;padding:0 16px 16px 16px;border-top:1px dashed var(--line)}
+.card.open .answer{display:block}
+.answer-inner{padding-top:12px;color:var(--ink)}
+.answer h4{margin:14px 0 6px;font-size:.95rem;color:var(--accent)}
+.answer ul{margin:8px 0;padding-left:20px}
+.answer li{margin:3px 0}
+.answer code{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-family:"Cascadia Code",Consolas,monospace;font-size:.85em}
+.answer pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;font-size:.82rem}
+.answer table{border-collapse:collapse;width:100%;margin:10px 0;font-size:.85rem}
+.answer th,.answer td{border:1px solid var(--line);padding:6px 9px;text-align:left}
+.answer th{background:var(--bg)}
+.tip{background:var(--accentsoft);border-radius:10px;padding:10px 12px;margin:10px 0;font-size:.9rem}
+.tip b{color:var(--accent)}
+.warn{background:var(--p1soft);border-radius:10px;padding:10px 12px;margin:10px 0;font-size:.9rem}
+/* flashcard / quiz */
+.stage{max-width:760px;margin:10px auto}
+.fcard{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);min-height:300px;padding:26px;display:flex;flex-direction:column}
+.fcard .badge{align-self:flex-start;margin-bottom:14px}
+.fq{font-size:1.25rem;font-weight:700;margin-bottom:10px}
+.fcat{font-size:.8rem;color:var(--muted);margin-bottom:16px}
+.fa{display:none;border-top:1px dashed var(--line);padding-top:14px;margin-top:4px}
+.fcard.revealed .fa{display:block}
+.fhint{color:var(--muted);font-style:italic;margin-top:auto}
+.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px auto;max-width:760px}
+.btn{border:none;border-radius:10px;padding:11px 20px;font-weight:700;font-size:.92rem;cursor:pointer}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+.btn.good{background:#15a05a;color:#fff}
+.btn.again{background:var(--p1);color:#fff}
+.btn:disabled{opacity:.4;cursor:default}
+.progress{max-width:760px;margin:8px auto;height:8px;background:var(--line);border-radius:999px;overflow:hidden}
+.progress>i{display:block;height:100%;background:var(--accent);width:0}
+.qzmeta{max-width:760px;margin:6px auto 0;display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted)}
+.empty{text-align:center;color:var(--muted);padding:50px 10px}
+.footer{color:var(--muted);font-size:.8rem;text-align:center;padding:24px 10px}
+.kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-size:.78rem;background:var(--panel)}
+@media(max-width:560px){header.top h1{font-size:1.25rem}.qbtns{flex-direction:column}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div>
+      <h1>🎓 Baza wiedzy do obrony pracy magisterskiej</h1>
+      <p><b>Analiza efektywności i zastosowań narzędzi do automatyzacji testów w aplikacjach internetowych</b> — Oskar Wołcz, nr albumu 202221 · Politechnika Gdańska, WETI · Informatyka, II stopień, spec. Systemy i technologie mobilne · Opiekun: dr inż. Jarosław Kuchta · Recenzent: dr inż. Jakub Miler</p>
+    </div>
+    <div class="htools">
+      <button class="iconbtn" id="themeBtn" title="Tryb jasny/ciemny">🌙 Motyw</button>
+      <button class="iconbtn" id="resetBtn" title="Wyczyść postęp">♻️ Reset</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat"><b id="stTotal">0</b>pytań łącznie</div>
+      <div class="stat"><b id="stKnown">0</b>opanowanych</div>
+      <div class="stat"><b id="stFav">0</b>ulubionych</div>
+      <div class="stat"><b id="stP1">0</b>do pracy (P1)</div>
+    </div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="wrap">
+    <div class="modes">
+      <button class="mode active" data-mode="browse">📚 Przeglądaj</button>
+      <button class="mode" data-mode="cards">🃏 Fiszki</button>
+      <button class="mode" data-mode="quiz">🎯 Quiz</button>
+    </div>
+    <div class="searchrow">
+      <input id="search" placeholder="🔍 Szukaj w pytaniach i odpowiedziach… (np. Playwright, hipoteza, fotogrametria, Scrum)">
+      <select id="cat"><option value="all">Wszystkie kategorie</option></select>
+    </div>
+    <div class="filters" id="prioFilters">
+      <button class="chip" data-p="all">Wszystkie priorytety</button>
+      <button class="chip active" data-p="1">① Praca i obrona</button>
+      <button class="chip" data-p="2">② Kierunkowe</button>
+      <button class="chip" data-p="3">③ Komisja</button>
+      <span style="flex:1"></span>
+      <button class="chip toggle" data-toggle="fav">★ Tylko ulubione</button>
+      <button class="chip toggle" data-toggle="unknown">Tylko nieopanowane</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="wrap">
+    <div id="browseView"></div>
+    <div id="cardsView" style="display:none"></div>
+    <div id="quizView" style="display:none"></div>
+  </div>
+</main>
+
+<div class="footer wrap">
+  Materiał przygotowany do nauki własnej · dane liczbowe pochodzą z pracy (tabele 4.1–4.4) · postęp zapisywany lokalnie w przeglądarce.<br>
+  Skróty w fiszkach/quizie: <span class="kbd">Spacja</span> odsłoń · <span class="kbd">→</span> następne · <span class="kbd">←</span> poprzednie
+</div>
+
+<script>
+/* ====================== DANE ====================== */
+const DATA = [
+{p:1,cat:"Praca — podstawy",q:"Jaki jest cel i temat Twojej pracy?",a:`<p>Temat: <b>„Analiza efektywności i zastosowań narzędzi do automatyzacji testów w aplikacjach internetowych”</b>.</p>
+<p>Celem głównym jest <b>wielowymiarowa analiza porównawcza czterech narzędzi do automatyzacji testów end-to-end</b> aplikacji webowych: <b>Selenium, Cypress, Playwright i TestCafe</b>. Praca określa, jakie możliwości oferują poszczególne narzędzia, w których aspektach sprawdzają się najlepiej, a gdzie napotykają ograniczenia.</p>
+<h4>Jak to ująć na obronie (1 zdanie)</h4>
+<p>„Zaprojektowałem i przeprowadziłem powtarzalny eksperyment porównawczy, w którym ten sam zestaw 9 scenariuszy testowych zaimplementowałem w 4 narzędziach i oceniłem je zestawem 13 metryk w 6 kategoriach, aby dać zespołom obiektywną podstawę wyboru narzędzia.”</p>`},
+
+{p:1,cat:"Praca — podstawy",q:"Jaki charakter ma praca i dlaczego taki?",a:`<p>Praca ma charakter <b>teoretyczno-eksperymentalny</b> (ang. <em>theoretical-experimental work</em>).</p>
+<ul>
+<li><b>Teoretyczny</b> — przegląd literatury, usystematyzowanie wiedzy o testowaniu i metrykach oceny narzędzi.</li>
+<li><b>Eksperymentalny</b> — samodzielnie zaprojektowany i wykonany eksperyment pomiarowy na realnej aplikacji, z rejestracją danych ilościowych.</li>
+</ul>
+<p>Połączenie obu jest uzasadnione: teoria dostarcza ram i metryk, a eksperyment je weryfikuje w kontrolowanych, powtarzalnych warunkach.</p>`},
+
+{p:1,cat:"Praca — podstawy",q:"Jaki problem badawczy rozwiązujesz? Jaka jest luka badawcza?",a:`<p><b>Problem:</b> brak obiektywnej, wielowymiarowej oceny narzędzi do automatyzacji testów w jednolitych, powtarzalnych warunkach — zespoły nie mają jednoznacznych kryteriów wyboru, a literatura i materiały producentów dają rozbieżne wnioski.</p>
+<h4>Trzy luki badawcze (rozdz. 2.3)</h4>
+<ul>
+<li><b>Niepełne pokrycie współczesnych narzędzi</b> — badania porównują zwykle 2–3 narzędzia; szersze zestawienia są tylko taksonomiczne (bez pomiarów).</li>
+<li><b>Wąski zakres metryk</b> — najczęściej tylko czas i zasoby, z pominięciem użyteczności, raportowania błędów i ekosystemu.</li>
+<li><b>Brak oceny w kontekście wykrywania defektów</b> — testy prawie zawsze na poprawnej aplikacji, bez scenariuszy z celowymi błędami.</li>
+</ul>
+<p>Moja praca wypełnia te luki: 4 narzędzia, 13 metryk w 6 kategoriach, jedno środowisko i scenariusze z celowo wprowadzonymi defektami.</p>`},
+
+{p:1,cat:"Praca — podstawy",q:"Jaka jest hipoteza badawcza i czy została potwierdzona?",a:`<p><b>Hipoteza:</b> badane narzędzia, mimo podobnego przeznaczenia, <b>różnią się istotnie pod względem praktycznej przydatności</b> w różnych aspektach procesu testowego, a świadomy wybór wymaga porównania tych aspektów w warunkach odzwierciedlających rzeczywiste zastosowanie.</p>
+<p><b>Wynik: hipoteza potwierdzona.</b> Różnice okazały się na tyle wyraźne (i przekraczające szum pomiarowy — niskie SD), że <b>nie da się wskazać uniwersalnego zwycięzcy</b> — żadne narzędzie nie dominuje we wszystkich 5 kategoriach jednocześnie. To kluczowy wniosek pracy.</p>`},
+
+{p:1,cat:"Praca — podstawy",q:"Dlaczego temat jest aktualny i ważny?",a:`<ul>
+<li>Aplikacje webowe są coraz bardziej złożone, a cykle wydawnicze coraz krótsze (CI/CD) — testowanie manualne nie nadąża.</li>
+<li>Automatyzacja testów to dziś jeden z <b>filarów zapewnienia jakości (QA)</b>.</li>
+<li>Rynek narzędzi jest bogaty i szybko się zmienia (Playwright — pierwsze stabilne wydanie 2020 — już dominuje), więc świeże porównanie ma wartość praktyczną.</li>
+<li>Recenzent (Miler) potwierdził: problem <b>aktualny, istotny i otwarty</b>.</li>
+</ul>`},
+
+{p:1,cat:"Praca — podstawy",q:"Z jakich rozdziałów składa się praca?",a:`<p>6 rozdziałów (ok. 60 stron):</p>
+<ul>
+<li><b>1. Wstęp</b> — wprowadzenie, cel, konstrukcja pracy.</li>
+<li><b>2. Problematyka badawcza</b> — znaczenie testowania, analiza literatury (4 nurty), luki badawcze.</li>
+<li><b>3. Projekt eksperymentu</b> — metodyka, 13 metryk, wybór narzędzi, środowisko, 9 scenariuszy.</li>
+<li><b>4. Realizacja badań empirycznych</b> — instalacja/konfiguracja, implementacja skryptów, pomiary (tabele 4.1–4.4).</li>
+<li><b>5. Analiza i porównanie wyników</b> — 5 kategorii + synteza (wykresy radarowe) + ograniczenia.</li>
+<li><b>6. Podsumowanie i wnioski</b> — rekomendacje i kierunki dalszych prac.</li>
+</ul>`},
+
+{p:1,cat:"Praca — podstawy",q:"Jakie cztery nurty badawcze wyróżniłeś w analizie literatury?",a:`<ol>
+<li><b>Opracowania taksonomiczne</b> — porządkują krajobraz narzędzi wg kryteriów opisowych (języki, raportowanie, przeglądarki), ale <em>bez pomiarów</em>.</li>
+<li><b>Badania empiryczne</b> — konkretne narzędzia w kontrolowanym eksperymencie (np. García i in.: Selenium/Cypress/Puppeteer/Playwright; Leotta i in.: Page Object).</li>
+<li><b>Prace teoretyczne</b> — formalne metryki/wzory oceny w oderwaniu od implementacji (często bez walidacji empirycznej).</li>
+<li><b>Opracowania wtórne</b> — systematyczne przeglądy i mapowania (SLR), m.in. Dogan i in., które wskazują, że badania używają zwykle niewielu metryk i rzadko scenariuszy z defektami.</li>
+</ol>
+<p>Mój wkład sytuuje się w nurcie empirycznym, z elementami nurtu metryk.</p>`},
+
+{p:1,cat:"Praca — podstawy",q:"Co to są testy end-to-end (E2E) i dlaczego skupiasz się właśnie na nich?",a:`<p><b>Testy E2E</b> weryfikują pełną ścieżkę użytkownika przez aplikację — od interfejsu, przez logikę, aż po wynik — symulując realne działanie człowieka w przeglądarce (logowanie → koszyk → zamówienie).</p>
+<h4>Dlaczego E2E</h4>
+<ul>
+<li>Najbliżej rzeczywistych warunków eksploatacji — testują z perspektywy użytkownika końcowego.</li>
+<li>Wszystkie 4 narzędzia są przede wszystkim narzędziami E2E/UI, więc porównanie jest „jabłka do jabłek”.</li>
+<li>To poziom, na którym najmocniej widać różnice w sterowaniu przeglądarką, oczekiwaniu na elementy i raportowaniu błędów.</li>
+</ul>
+<p>W piramidzie testów E2E są najwyżej (najmniej liczne, najdroższe, najwolniejsze, ale najbardziej wiarygodne biznesowo).</p>`},
+
+{p:1,cat:"Praca — podstawy",q:"Czym Twoja praca różni się od cytowanych badań (García, Gosik/Miłosz, Pasławski)?",a:`<table><tr><th>Badanie</th><th>Narzędzia</th><th>Czego brakowało</th></tr>
+<tr><td>García i in. 2024</td><td>Selenium, Cypress, Puppeteer, Playwright</td><td>tylko 3 metryki (czas, CPU, RAM)</td></tr>
+<tr><td>Gosik, Miłosz 2025</td><td>Cypress, Playwright</td><td>tylko 2 narzędzia, brak defektów</td></tr>
+<tr><td>Pasławski (Python)</td><td>Selenium, Playwright, Splinter</td><td>jeden język, brak defektów</td></tr></table>
+<p><b>Mój wyróżnik:</b> 4 współczesne narzędzia + <b>13 metryk w 6 kategoriach</b> (nie tylko wydajność, ale i użyteczność, raportowanie, ekosystem) + <b>scenariusze z celowo wprowadzonymi defektami</b> (D1–D3) do pomiaru jakości wykrywania błędów. To połączenie nie występuje łącznie w żadnej z prac.</p>`},
+{p:1,cat:"Metodyka i eksperyment",q:"Opisz metodykę badania — z jakich etapów się składa?",a:`<p>Badanie zaprojektowano jako <b>eksperyment porównawczy w kontrolowanym środowisku</b>, podzielony na 4 etapy:</p>
+<ol>
+<li><b>Przygotowanie środowiska</b> — instalacja i konfiguracja każdego narzędzia w identycznym środowisku sprzętowo-systemowym (źródło metryk użyteczności instalacji M5).</li>
+<li><b>Przygotowanie scenariuszy</b> — jeden, wspólny zestaw 9 scenariuszy dla wszystkich narzędzi (etap przygotowawczy, bez pomiarów).</li>
+<li><b>Implementacja skryptów</b> — przełożenie scenariuszy na kod w każdym narzędziu z możliwie zbliżoną logiką (źródło M6 — liczba linii kodu).</li>
+<li><b>Wykonanie i pomiar</b> — wielokrotne (10×) uruchomienie zestawów i rejestracja czasu, zasobów oraz jakości raportowania (w tym na scenariuszach z defektami).</li>
+</ol>
+<p>Każdy etap wykonano identycznie dla 4 narzędzi → zapewnia porównywalność.</p>`},
+
+{p:1,cat:"Metodyka i eksperyment",q:"Jak zapewniłeś powtarzalność i wiarygodność pomiarów?",a:`<ul>
+<li><b>Jedno środowisko sprzętowo-systemowe</b> dla wszystkich narzędzi (ta sama maszyna, ta sama wersja aplikacji).</li>
+<li><b>Uruchomienie lokalne</b> — wyeliminowano wpływ sieci, opóźnień i usług zewnętrznych.</li>
+<li><b>10 powtórzeń</b> każdego pomiaru → wartość średnia + <b>odchylenie standardowe (SD)</b>.</li>
+<li><b>Identyczna logika scenariuszy</b> i te same selektory <code>data-test</code> we wszystkich narzędziach.</li>
+<li><b>Zawężenie pomiaru CPU/RAM</b> tylko do procesów narzędzia (proces główny + przeglądarka + procesy potomne), z odseparowaniem tła i serwera aplikacji.</li>
+</ul>
+<div class="tip"><b>Dowód jakości:</b> SD czasu całkowitego (M2) to tylko 1,5–3,7% średniej → różnice między narzędziami są znaczące, nie szumowe.</div>`},
+
+{p:1,cat:"Metodyka i eksperyment",q:"Na jakim sprzęcie i w jakim środowisku przeprowadziłeś badania?",a:`<table><tr><th>Parametr</th><th>Wartość</th></tr>
+<tr><td>Procesor</td><td>AMD Ryzen 7 4800H, 8 rdzeni, 2,90 GHz</td></tr>
+<tr><td>RAM</td><td>16 GB</td></tr>
+<tr><td>GPU</td><td>NVIDIA GeForce RTX 2060</td></tr>
+<tr><td>System</td><td>Windows 11 Home (25H2), x64</td></tr>
+<tr><td>Edytor / runner</td><td>Visual Studio Code, Node.js + npm</td></tr></table>
+<p>Aplikacja uruchamiana lokalnie w trybie developerskim. Pomiary CPU/RAM przez <b>Windows Performance Monitor</b>, czasy z raportów narzędzi (pola <code>duration</code> / <code>durationMs</code>).</p>`},
+
+{p:1,cat:"Metodyka i eksperyment",q:"Jaką aplikację testowałeś i dlaczego akurat ją?",a:`<p><b>sample-app-web</b> — aplikacja React (SPA) symulująca prosty sklep internetowy (Swag Store, oparta na Sauce Labs Sample App).</p>
+<h4>Dlaczego ta aplikacja</h4>
+<ul>
+<li>Realizuje <b>typowe ścieżki e-commerce</b>: logowanie, lista produktów, sortowanie, koszyk, zamówienie, wylogowanie — reprezentatywne dla wielu komercyjnych aplikacji.</li>
+<li>Ma <b>stabilne selektory <code>data-test</code></b> — niezależne od warstwy wizualnej, idealne do uczciwego porównania narzędzi.</li>
+<li>Udostępnia <b>predefiniowane konta z celowymi defektami</b> (<code>locked_out_user</code>, <code>error_user</code>) — pozwala mierzyć jakość wykrywania błędów.</li>
+<li>Uruchamiana lokalnie → łatwo „infekować” ją błędami i zapewnić powtarzalność.</li>
+</ul>`},
+
+{p:1,cat:"Metodyka i eksperyment",q:"Dlaczego 10 powtórzeń, a nie więcej? To nie za mało?",a:`<p>10 powtórzeń pozwala policzyć <b>średnią i odchylenie standardowe</b> oraz wykazać, że różnice między narzędziami nie wynikają z przypadkowych wahań (niskie SD to potwierdza).</p>
+<p><b>Świadomie przyznaję ograniczenie</b> (rozdz. 5.7): to za mało na zaawansowane <b>wnioskowanie statystyczne</b> — testy istotności różnic średnich (np. t-Studenta, ANOVA) czy przedziały ufności wymagałyby większej liczby prób (np. 30+).</p>
+<div class="tip"><b>Na obronie:</b> „Liczba 10 to świadomy kompromis między pracochłonnością a wiarygodnością; wystarcza do wykazania kierunku i skali różnic, a zwiększenie liczby powtórzeń wskazałem wprost jako kierunek dalszych prac.”</div>`},
+
+{p:1,cat:"Metodyka i eksperyment",q:"Dlaczego wybrałeś właśnie Selenium, Cypress, Playwright i TestCafe?",a:`<p>To jedno z trudniejszych pytań (recenzent Kuchta zauważył „dość przypadkowy wybór”). Uzasadnienie:</p>
+<ul>
+<li><b>Reprezentują różne architektury</b> — to klucz: Selenium (WebDriver), Cypress (silnik w przeglądarce), Playwright (protokoły deweloperskie/CDP), TestCafe (proxy HTTP). Cztery różne modele = ciekawe porównanie.</li>
+<li><b>Są współczesne i powszechnie używane</b> w przemyśle i nauce (npm, GitHub).</li>
+<li><b>Pokrywają spektrum dojrzałości</b> — od klasyka (Selenium, od 2004) po nowoczesny standard (Playwright, 2020).</li>
+<li>Wszystkie działają w ekosystemie <b>Node.js/JavaScript</b> → wspólny mianownik dla uczciwego porównania (M6 — linie kodu).</li>
+</ul>
+<div class="warn"><b>Słaby punkt do obrony:</b> brak Puppeteer/Katalon/WebdriverIO. Odpowiedź: ograniczyłem się do 4, by zachować głębię (13 metryk × 9 scenariuszy × 4); rozszerzenie listy to naturalny kierunek dalszych prac.</div>`},
+
+{p:1,cat:"Metodyka i eksperyment",q:"Jak zadbałeś o to, by porównanie kodu (M6) było uczciwe?",a:`<ul>
+<li>Wszystkie 4 implementacje SC-06 realizują <b>dokładnie ten sam scenariusz</b>: logowanie → dodanie produktu → formularz zamówienia → weryfikacja podsumowania → potwierdzenie.</li>
+<li>Ta sama strategia selektorów — <b>atrybuty <code>data-test</code></b> wszędzie (odporne na zmiany CSS).</li>
+<li>Możliwie zbliżona logika i zakres asercji.</li>
+</ul>
+<p>Dzięki temu różnice w liczbie linii (100–135) wynikają <b>wyłącznie z charakterystyki API narzędzia</b>, a nie z innego zakresu testu.</p>`},
+
+{p:1,cat:"Metodyka i eksperyment",q:"Dlaczego użyłeś selektorów data-test zamiast CSS/XPath?",a:`<p>Selektory oparte na dedykowanych atrybutach <code>data-test</code> to <b>wzorzec inżynierii testów</b>:</p>
+<ul>
+<li><b>Stabilność</b> — uniezależniają test od zmian w warstwie wizualnej (klasy CSS, struktura DOM, treść).</li>
+<li><b>Czytelność i intencja</b> — atrybut istnieje wyłącznie dla testów, więc jasno wyraża „to jest punkt zaczepienia testu”.</li>
+<li><b>Uczciwość porównania</b> — ta sama strategia we wszystkich narzędziach eliminuje zmienną zakłócającą.</li>
+</ul>
+<p>W pracy używam ich konsekwentnie: <code>cy.get('[data-test=...]')</code>, <code>page.getByTestId(...)</code>, <code>Selector('[data-test=...]')</code>, a w Selenium <code>By.css</code>/<code>By.id</code>.</p>`},
+{p:1,cat:"Metryki (M1–M13)",q:"Wymień wszystkie 13 metryk i ich 6 kategorii.",a:`<table><tr><th>#</th><th>Metryka</th><th>Kategoria / jednostka</th></tr>
+<tr><td>M1</td><td>Średni czas pojedynczego testu</td><td>Wydajność czasowa — s</td></tr>
+<tr><td>M2</td><td>Czas całego zestawu testów</td><td>Wydajność czasowa — s</td></tr>
+<tr><td>M3</td><td>Średnie zużycie CPU</td><td>Zużycie zasobów — %</td></tr>
+<tr><td>M4</td><td>Średnie zużycie RAM</td><td>Zużycie zasobów — MB</td></tr>
+<tr><td>M5</td><td>Liczba kroków instalacji</td><td>Użyteczność — liczba</td></tr>
+<tr><td>M6</td><td>Liczba linii kodu SC-06</td><td>Użyteczność — liczba</td></tr>
+<tr><td>M7</td><td>Czas od błędu do komunikatu</td><td>Raportowanie błędów — s</td></tr>
+<tr><td>M8</td><td>Kompletność raportu błędu</td><td>Raportowanie błędów — 0–5</td></tr>
+<tr><td>M9</td><td>Popularność (pobrania npm/mies.)</td><td>Ekosystem i wsparcie — liczba</td></tr>
+<tr><td>M10</td><td>Rozmiar społeczności (gwiazdki GitHub)</td><td>Ekosystem i wsparcie — liczba</td></tr>
+<tr><td>M11</td><td>Liczba obsługiwanych przeglądarek</td><td>Wszechstronność — liczba</td></tr>
+<tr><td>M12</td><td>Obsługa testów mobilnych</td><td>Wszechstronność — tak/nie</td></tr>
+<tr><td>M13</td><td>Obsługa testów API</td><td>Wszechstronność — tak/nie</td></tr></table>`},
+
+{p:1,cat:"Metryki (M1–M13)",q:"Jak uzasadniasz dobór metryk?",a:`<p>Metryki dobrano tak, by były <b>proste, mierzalne i odtwarzalne</b> w niewielkim eksperymencie, a jednocześnie zgodne z kierunkami z literatury (Srivastava i in., John & Kelly).</p>
+<h4>Założenia</h4>
+<ul>
+<li>Pokrywają <b>kluczowe cechy</b> istotne w procesie testowym (wydajność, koszt wdrożenia/utrzymania, jakość feedbacku, dojrzałość).</li>
+<li>Łączą dane <b>ilościowe</b> (czas, CPU/RAM, linie kodu) z <b>punktowymi</b> (kompletność raportu 0–5).</li>
+<li>Umożliwiają zbudowanie <b>wielowymiarowego profilu</b> narzędzia, bez sztucznego wyłaniania jednego „najlepszego”.</li>
+</ul>
+<p>Literatura podkreśla zwłaszcza: czas wykonania, jakość raportowania, zakres zastosowań, koszt przygotowania/utrzymania, wpływ na środowisko i łatwość użycia — i te obszary są pokryte.</p>`},
+
+{p:1,cat:"Metryki (M1–M13)",q:"Jak dokładnie mierzona jest kompletność raportu błędu (M8)?",a:`<p>M8 to skala <b>0–5</b>, po 1 punkcie za obecność elementu diagnostycznego w raporcie:</p>
+<ol>
+<li>Nazwa testu</li>
+<li>Opis błędu / komunikat asercji</li>
+<li>Wskazanie kroku testowego</li>
+<li>Zrzut ekranu</li>
+<li>Nagranie wideo</li>
+</ol>
+<p><b>Wyniki:</b> Cypress 5/5 i Playwright 5/5 (komplet, w tym zrzuty i wideo „z pudełka”); Selenium 3/5 i TestCafe 3/5 (pełna informacja tekstowa, ale bez natywnych zrzutów/wideo — wymagają doinstalowania bibliotek).</p>
+<p>Pierwsze 3 kryteria spełniają wszystkie narzędzia — różnicują dopiero <b>artefakty wizualne</b> (zrzut, wideo).</p>`},
+
+{p:1,cat:"Metryki (M1–M13)",q:"Jak działa normalizacja na wykresach radarowych (synteza)?",a:`<p>13 metryk zagregowano w <b>5 kategoriach</b> (wydajność czasowa, zużycie zasobów, użyteczność, raportowanie błędów, ekosystem i wszechstronność).</p>
+<ul>
+<li>Każdą metrykę znormalizowano do skali <b>0,2–1,0</b>, gdzie <b>1,0 = najlepszy</b> wynik spośród 4 narzędzi, a <b>0,2 = najgorszy</b>.</li>
+<li>Dolna granica 0,2 (zamiast 0) zapobiega „zapadaniu się” wielokąta do środka i utracie czytelności.</li>
+<li>Pozycja w kategorii = <b>średnia arytmetyczna</b> znormalizowanych metryk w tej kategorii.</li>
+</ul>
+<div class="warn"><b>Uwaga obronna:</b> normalizacja min–max jest <b>względna</b> (zależy od zestawu 4 narzędzi) — dodanie piątego narzędzia zmieniłoby wartości. To świadomy wybór dla czytelności porównania, nie ocena bezwzględna.</div>`},
+
+{p:1,cat:"Metryki (M1–M13)",q:"Czym różni się M1 od M2 i dlaczego dają inną kolejność narzędzi?",a:`<ul>
+<li><b>M1</b> — średni czas <em>pojedynczego</em> testu. Najlepszy: <b>Selenium (1,036 s)</b>, bo bezpośrednie polecenia WebDriver mają krótki łańcuch komunikacji.</li>
+<li><b>M2</b> — czas <em>całego zestawu</em> 9 scenariuszy. Najlepszy: <b>Cypress (57,97 s)</b>.</li>
+</ul>
+<p><b>Dlaczego odwrócenie:</b> Selenium tworzy <b>nową instancję przeglądarki dla każdego testu</b> (<code>beforeEach</code>) → wielokrotnie płaci koszt inicjalizacji sesji WebDriver. Cypress używa <b>jednej instancji na plik</b> i tylko resetuje stan między testami → mniejszy narzut na poziomie zestawu, mimo wolniejszego pojedynczego testu.</p>
+<div class="tip">To świetny przykład, że „najszybsze narzędzie” zależy od tego, <b>co</b> mierzysz — pojedynczy test czy cały suite.</div>`},
+
+{p:1,cat:"Metryki (M1–M13)",q:"Skąd wziąłeś wartości metryk ekosystemu (M9, M10) i jak je interpretować?",a:`<ul>
+<li><b>M9</b> — średnie miesięczne pobrania pakietu npm (npmtrends.com), odczyt w dniu badania.</li>
+<li><b>M10</b> — liczba gwiazdek repozytorium na GitHub.</li>
+</ul>
+<p><b>Ważne zastrzeżenie z pracy:</b> M9 to wskaźnik <b>szacunkowy</b> — licznik npm zlicza każde pobranie (także z serwerów CI/CD, mirrorów, botów), więc nie równa się liczbie użytkowników. Buforowanie ogranicza, ale nie eliminuje nadliczenia. Dlatego M9 służy do <b>porównań względnych</b>.</p>
+<p>M10 (gwiazdki) jest stabilniejsze — każda gwiazdka to świadoma decyzja człowieka. Hierarchie M9 i M10 są zbieżne: Playwright ≫ Cypress &gt; Selenium &gt; TestCafe.</p>`},
+
+{p:1,cat:"Metryki (M1–M13)",q:"Dlaczego M7 (czas wykrycia błędu) mierzysz właśnie na scenariuszach defektowych?",a:`<p>M7 mierzy, jak szybko narzędzie sygnalizuje niepowodzenie — co ma sens tylko wtedy, gdy <b>jest co wykrywać</b>. Dlatego uruchamiam scenariusze z celowo wprowadzonymi defektami (SC-08, SC-09 → defekty D1, D2, D3), po 10 powtórzeń, i liczę średnią z 3 defektów.</p>
+<p>To realizacja jednej z luk badawczych: większość badań testuje tylko poprawną aplikację. Pomiar na defektach pokazuje <b>realną wartość narzędzia jako „detektora regresji”</b>, a rozbicie na D1/D2/D3 ujawnia, że średnia M7 maskuje fundamentalne różnice w mechanizmach wykrywania.</p>`},
+{p:1,cat:"Narzędzia — architektura i wyniki",q:"Selenium — architektura, wyniki i profil. Dlaczego takie wyniki?",a:`<h4>Architektura</h4>
+<p>Najstarsze (ThoughtWorks, ~2004). To <b>biblioteka sterująca</b>, nie kompletny framework — komunikuje się z przeglądarką przez protokół <b>WebDriver</b> (przez sieć/sterownik, np. ChromeDriver, w Selenium 4 zarządzany przez SeleniumManager). Wymaga doinstalowania frameworka (Mocha), asercji (Chai), raportów (Mochawesome). Model asynchroniczny <code>async/await</code>, ręczne oczekiwanie <code>driver.wait(until...)</code>, ręczne <code>driver.quit()</code> w <code>finally</code>.</p>
+<h4>Wyniki</h4>
+<ul>
+<li><b>M1 = 1,036 s</b> — najszybszy pojedynczy test (krótki łańcuch WebDriver).</li>
+<li><b>M4 = 555 MB</b> — najniższe zużycie RAM (lekki proces sterujący).</li>
+<li>M2 = 80,95 s, M3 CPU 6,3%, M5 = 6 (najwięcej kroków), M6 = 135 linii (najwięcej kodu), M7 = 7,31 s, M8 = 3/5, npm ~9 mln, GitHub ~31 tys., 5 przeglądarek, bez mobile, bez API.</li>
+</ul>
+<h4>Profil</h4>
+<p>Narzędzie <b>dojrzałe, najlżejsze zasobowo i najbardziej elastyczne</b>, ale wymagające największego nakładu pracy (instalacja + kod). Dobre na CI z ograniczoną pamięcią i przy zrównoleglaniu.</p>`},
+
+{p:1,cat:"Narzędzia — architektura i wyniki",q:"Cypress — architektura, wyniki i profil. Dlaczego takie wyniki?",a:`<h4>Architektura</h4>
+<p>Nowoczesny, zintegrowany framework E2E. <b>Silnik testowy działa wewnątrz przeglądarki</b>, w tym samym kontekście co aplikacja. Jeden pakiet npm (framework + runner + GUI). Polecenia na obiekcie <code>cy</code> trafiają do <b>wewnętrznej kolejki</b> (brak <code>async/await</code>), łańcuchowanie <code>cy.get().click()</code>, asercje <code>should()</code> z auto-retry, „time-travel”. Domyślnie przeglądarka Electron.</p>
+<h4>Wyniki</h4>
+<ul>
+<li><b>M2 = 57,97 s</b> — najkrótszy czas całego zestawu.</li>
+<li><b>M7 = 2,97 s</b> — najszybsze średnie wykrycie błędu (natywnie łapie wyjątki JS).</li>
+<li><b>M8 = 5/5</b> — najbardziej kompletny raport (zrzuty + wideo z pudełka).</li>
+<li>M1 = 1,47 s, M3 CPU 7,5% (najwyższe), M4 RAM 966 MB, M5 = 4, M6 = 107, npm ~28 mln, GitHub ~48 tys., 4 przeglądarki (bez Safari), bez mobile, <b>API: tak</b> (<code>cy.request</code>).</li>
+</ul>
+<h4>Profil</h4>
+<p>Mistrz <b>szybkiego sprzężenia zwrotnego</b> dla nowoczesnych aplikacji webowych. Koszt: wysokie CPU/RAM (silnik w przeglądarce) i brak Safari/mobile.</p>`},
+
+{p:1,cat:"Narzędzia — architektura i wyniki",q:"Playwright — architektura, wyniki i profil. Dlaczego takie wyniki?",a:`<h4>Architektura</h4>
+<p>Microsoft, pierwsze stabilne wydanie 2020. Komunikacja przez <b>protokoły deweloperskie przeglądarki (CDP)</b> bez warstw pośrednich. Wiele języków (JS/TS, Python, Java, C#). <b>Lokatory z auto-waitingiem</b>, asercje <b>web-first</b> (<code>expect().toBeVisible()</code> z ponawianiem), izolacja przez <b>fixtures</b> (<code>{ page }</code>), <b>Trace Viewer</b>. Silniki: Chromium, Firefox, WebKit.</p>
+<h4>Wyniki</h4>
+<ul>
+<li><b>M6 = 100 linii</b> — najkrótszy kod (zwięzłe API + auto-waiting).</li>
+<li><b>M3 CPU = 3,7%</b> — najniższe zużycie procesora.</li>
+<li><b>M9 ~130 mln, M10 ~82 tys.</b> — lider ekosystemu (mimo najmłodszego wieku).</li>
+<li><b>M8 = 5/5</b>, 5 przeglądarek (z WebKit/Safari), <b>API: tak</b>. M1 = 3,352 s, M2 = 93,89 s, M4 = 822 MB, M5 = 5, M7 = 7,43 s (najbardziej przewidywalny, ~7,4 s dla każdego defektu).</li>
+</ul>
+<h4>Profil</h4>
+<p><b>Najbardziej zrównoważony i uniwersalny</b>, lider ekosystemu. Słabszy obszar: czasy wykonania (3. miejsce w M1/M2) — narzut własnego protokołu i auto-waitingu, ale w zamian wysoka stabilność.</p>`},
+
+{p:1,cat:"Narzędzia — architektura i wyniki",q:"TestCafe — architektura, wyniki i profil. Dlaczego takie wyniki?",a:`<h4>Architektura</h4>
+<p>DevExpress, pierwsze stabilne 2017. Unikalny model: <b>serwer proxy HTTP</b> wstrzykiwany między przeglądarkę a aplikację — <b>bez WebDriver i bez CDP</b>. Działa w <b>dowolnej zainstalowanej przeglądarce</b> bez sterowników. Skrypty w TS, konstrukcje <code>fixture</code>/<code>test</code>, kontroler <code>t</code> (<code>t.click</code>, <code>t.typeText</code>, <code>t.expect</code>), klasa <code>Selector</code>, auto-wait, mechanizm <b>roles</b>, raporty JSON/xUnit/JUnit.</p>
+<h4>Wyniki</h4>
+<ul>
+<li><b>M12 = tak</b> — <b>jedyne</b> narzędzie z natywnymi testami mobilnymi.</li>
+<li>M5 = 4 (krótka instalacja), 5 przeglądarek (z WebKit).</li>
+<li><b>Słabe:</b> M2 = 100,69 s (najwolniejszy zestaw), M4 = 967 MB (najwyższy RAM), M7 = 9,08 s (najwolniejsze wykrycie błędu), M8 = 3/5, npm ~1 mln i GitHub ~9 tys. (najmniejszy ekosystem), bez API. M1 = 3,402 s, M3 CPU 4,0%, M6 = 120.</li>
+</ul>
+<h4>Profil</h4>
+<p>Narzędzie <b>niszowe</b> — sensowny wybór niemal wyłącznie, gdy projekt wymaga <b>natywnych testów mobilnych</b> i pozostaje w ekosystemie webowym; w pozostałych metrykach wypada najsłabiej. Wolniejsze czasy = narzut proxy wstrzykującego skrypt do każdej strony.</p>`},
+
+{p:1,cat:"Narzędzia — architektura i wyniki",q:"Porównaj cztery architektury jednym zdaniem każda — to częste pytanie.",a:`<table><tr><th>Narzędzie</th><th>Sterowanie przeglądarką</th><th>Konsekwencja</th></tr>
+<tr><td><b>Selenium</b></td><td>protokół WebDriver (zewnętrzny sterownik)</td><td>lekkie, elastyczne, ale dużo ręcznej roboty</td></tr>
+<tr><td><b>Cypress</b></td><td>silnik <em>wewnątrz</em> przeglądarki, kolejka poleceń</td><td>szybki feedback, łapie wyjątki JS, ale ciężki i bez Safari/mobile</td></tr>
+<tr><td><b>Playwright</b></td><td>protokoły deweloperskie (CDP), auto-waiting</td><td>uniwersalny, stabilny, zwięzły kod</td></tr>
+<tr><td><b>TestCafe</b></td><td>proxy HTTP wstrzykujący skrypt</td><td>bez sterowników, działa wszędzie + mobile, ale wolny</td></tr></table>
+<div class="tip">Klucz: <b>różnica architektury tłumaczy niemal każdy wynik</b> — np. niskie RAM Selenium, wysokie CPU Cypress, przewidywalny M7 Playwright, wolny TestCafe.</div>`},
+{p:1,cat:"Scenariusze i defekty",q:"Opisz 9 scenariuszy testowych (SC-01 – SC-09).",a:`<table><tr><th>ID</th><th>Scenariusz</th><th>Przyp.</th><th>Użytkownik</th></tr>
+<tr><td>SC-01</td><td>Logowanie użytkownika</td><td>2</td><td>standardowy</td></tr>
+<tr><td>SC-02</td><td>Przeglądanie listy produktów (6 szt., sort A–Z)</td><td>3</td><td>standardowy</td></tr>
+<tr><td>SC-03</td><td>Sortowanie (nazwa A–Z/Z–A, cena rosnąco/malejąco)</td><td>4</td><td>standardowy</td></tr>
+<tr><td>SC-04</td><td>Dodanie produktu do koszyka (licznik, „Remove”)</td><td>4</td><td>standardowy</td></tr>
+<tr><td>SC-05</td><td>Przeglądanie koszyka (QTY, Description, pusty koszyk)</td><td>5</td><td>standardowy</td></tr>
+<tr><td>SC-06</td><td>Złożenie zamówienia (pełny proces + walidacja)</td><td>3</td><td>standardowy</td></tr>
+<tr><td>SC-07</td><td>Wylogowanie + blokada chronionych stron</td><td>2</td><td>standardowy</td></tr>
+<tr><td>SC-08</td><td>Logowanie z błędem (konto zablokowane)</td><td>1</td><td>z błędem</td></tr>
+<tr><td>SC-09</td><td>Proces zamówienia z błędem</td><td>2</td><td>z błędem</td></tr></table>
+<p>Razem 1–5 przypadków na scenariusz. SC-06 to scenariusz referencyjny dla metryki M6 (linie kodu). SC-08 i SC-09 dostarczają defektów do pomiaru M7.</p>`},
+
+{p:1,cat:"Scenariusze i defekty",q:"Jakie są trzy defekty (D1, D2, D3) i czym się różnią?",a:`<p>Każdy defekt to <b>inna klasa awarii</b> — to celowe, by sprawdzić różne mechanizmy wykrywania:</p>
+<ul>
+<li><b>D1 (SC-08)</b> — <code>locked_out_user</code>: logowanie zablokowane, aplikacja zwraca komunikat blokady <b>bez wyjątku JavaScript</b>. Test nie dociera do listy produktów → wykrycie przez <b>timeout asercji</b>.</li>
+<li><b>D2 (SC-09)</b> — <code>error_user</code>: <b>nieobsłużony wyjątek JS</b> przy dodaniu do koszyka produktu o nieparzystym ID.</li>
+<li><b>D3 (SC-09)</b> — <code>error_user</code>: wywołanie <b>nieistniejącej funkcji</b> blokuje finalizację zamówienia + błąd typu (TypeError) w polu nazwiska zatrzymuje wcześniejszy etap formularza.</li>
+</ul>
+<p>Trzy klasy: zablokowana funkcjonalność bez wyjątku (D1), niespodziewany wyjątek w trakcie interakcji (D2), wyjątek w fazie finalizacyjnej (D3).</p>`},
+
+{p:1,cat:"Scenariusze i defekty",q:"Dlaczego średnia M7 „maskuje” różnice? Rozbij na defekty.",a:`<p>Średnie M7: Cypress 2,97 s &lt; Selenium 7,31 s ≈ Playwright 7,43 s &lt; TestCafe 9,08 s. Ale rozbicie na defekty pokazuje, że <b>pozycja zależy od klasy błędu</b>:</p>
+<table><tr><th>Defekt</th><th>Cypress</th><th>Selenium</th><th>Playwright</th><th>TestCafe</th></tr>
+<tr><td>D1 (blokada, bez wyjątku)</td><td>6,12 s</td><td>~10 s</td><td>~7,4 s</td><td>16,36 s</td></tr>
+<tr><td>D2 (wyjątek JS)</td><td>1,43 s</td><td>~10 s</td><td>~7,4 s</td><td>4,80 s</td></tr>
+<tr><td>D3 (wyjątek finalizacja)</td><td>1,35 s</td><td>1,45 s</td><td>~7,4 s</td><td>6,07 s</td></tr></table>
+<ul>
+<li><b>Cypress</b> — błyskawiczny na wyjątkach JS (D2, D3), bo łapie je natywnie; wolny na D1 (czeka na timeout asercji).</li>
+<li><b>Selenium</b> — odwrotnie: D1/D2 dochodzą do limitu oczekiwania na element (~10 s), ale D3 szybki (wyjątek przerywa sterowanie zanim asercja zdąży).</li>
+<li><b>Playwright</b> — ~7,4 s niezależnie od defektu → <b>najbardziej przewidywalny</b> (asercje web-first zawsze czekają pełne okno).</li>
+<li><b>TestCafe</b> — najwolniejszy przy D1 (długi własny timeout logowania).</li>
+</ul>
+<div class="tip">Wniosek: nie ma „najszybszego w wykrywaniu” w oderwaniu od <b>typu</b> błędu — to ważna obserwacja jakościowa pracy.</div>`},
+
+{p:1,cat:"Scenariusze i defekty",q:"Jak poszczególne narzędzia technicznie wykrywają wyjątki JavaScript?",a:`<ul>
+<li><b>Cypress</b> — działa w tym samym kontekście przeglądarki co aplikacja, więc <b>nieobsłużony wyjątek JS jest natychmiast przechwytywany</b> jako niepowodzenie testu (stąd 1,4 s przy D2/D3).</li>
+<li><b>Selenium</b> — komunikuje się przez WebDriver i „widzi” głównie stan DOM; przy braku elementu <b>czeka do timeoutu</b> <code>driver.wait(until...)</code>.</li>
+<li><b>Playwright</b> — asercje web-first (<code>expect().toBeVisible()</code>, <code>toHaveURL()</code>) <b>zawsze czekają pełne okno</b> niezależnie od wyjątku w tle → stały czas.</li>
+<li><b>TestCafe</b> — parametr <code>skipJsErrors: false</code> sprawia, że oznacza test jako nieudany po błędzie aplikacji, ale ma <b>dłuższe własne limity czasowe</b>.</li>
+</ul>`},
+{p:1,cat:"Analiza wyników",q:"Wydajność czasowa — co wyszło i jak to wyjaśniasz?",a:`<p><b>M1 (pojedynczy test):</b> Selenium 1,036 s &lt; Cypress 1,47 s &lt; Playwright 3,352 s &lt; TestCafe 3,402 s. Najszybszy ~3,3× szybszy od najwolniejszego.</p>
+<p><b>M2 (cały zestaw):</b> Cypress 57,97 s &lt; Selenium 80,95 s &lt; Playwright 93,89 s &lt; TestCafe 100,69 s.</p>
+<h4>Wyjaśnienie</h4>
+<ul>
+<li>Selenium: szybki pojedynczy test (bezpośredni WebDriver), ale traci na zestawie (nowa przeglądarka co test).</li>
+<li>Cypress: jedna instancja na plik + reset stanu → najlepszy na zestawie.</li>
+<li>Playwright i TestCafe: narzut warstw abstrakcji (CDP + auto-waiting / proxy HTTP) — wolniejsze, ale stabilniejsze.</li>
+</ul>
+<p>Stabilność (SD M2) 1,5–3,7% średniej → różnice są realne.</p>`},
+
+{p:1,cat:"Analiza wyników",q:"Zużycie zasobów (CPU/RAM) — wyniki i praktyczne wnioski.",a:`<p><b>CPU (M3):</b> Cypress 7,5% &gt; Selenium 6,3% &gt; TestCafe 4,0% &gt; Playwright 3,7%.</p>
+<p><b>RAM (M4):</b> Selenium 555 MB &lt; Playwright 822 MB &lt; Cypress 966 MB &lt; TestCafe 967 MB. Najcięższy ~1,74× cięższy od najlżejszego.</p>
+<h4>Dlaczego</h4>
+<ul>
+<li>Selenium lekkie — proces sterujący komunikuje się przez sieć, stare instancje są zwalniane.</li>
+<li>Cypress wysokie CPU+RAM — silnik testowy żyje wewnątrz przeglądarki i trzyma stan wszystkich poleceń.</li>
+<li>TestCafe wysoki RAM — proxy wstrzykuje skrypt do każdej strony.</li>
+</ul>
+<div class="tip"><b>Praktyka:</b> przy zrównoleglaniu na współdzielonym CI/CD <b>Selenium skaluje się najlepiej</b> (mały ślad pamięci); Cypress/TestCafe wymagają więcej RAM. Playwright = kompromis (niskie CPU, średni RAM).</div>`},
+
+{p:1,cat:"Analiza wyników",q:"Użyteczność (instalacja M5, kod M6) — wyniki i interpretacja.",a:`<p><b>M5 (kroki instalacji):</b> Cypress 4 = TestCafe 4 &lt; Playwright 5 &lt; Selenium 6.</p>
+<p><b>M6 (linie kodu SC-06):</b> Playwright 100 &lt; Cypress 107 &lt; TestCafe 120 &lt; Selenium 135. Selenium o 35% dłuższy od Playwright.</p>
+<h4>Interpretacja</h4>
+<ul>
+<li>Cypress/TestCafe — pojedynczy pakiet npm z kompletnym frameworkiem → krótka instalacja.</li>
+<li>Playwright — dodatkowy krok pobrania binariów przeglądarek (<code>npx playwright install</code>), ale najzwięźlejszy kod (auto-waiting + zwarte API).</li>
+<li>Selenium — trzeba samodzielnie złożyć stos (selenium-webdriver + Mocha + Chai + ts-node + tsconfig) i ręcznie zarządzać <code>driver.wait</code>/<code>driver.quit</code>.</li>
+</ul>
+<p>Wniosek spójny: Selenium = największy koszt wdrożenia i utrzymania; nowoczesne frameworki automatyzują konfigurację i synchronizację.</p>`},
+
+{p:1,cat:"Analiza wyników",q:"Raportowanie błędów — czy szybkość i jakość raportu idą w parze?",a:`<p><b>Nie są skorelowane.</b></p>
+<ul>
+<li><b>Szybkość (M7):</b> Cypress 2,97 s najlepszy, TestCafe 9,08 s najgorszy.</li>
+<li><b>Kompletność (M8):</b> Cypress 5/5 i Playwright 5/5; Selenium 3/5 i TestCafe 3/5.</li>
+</ul>
+<p>Playwright jest dopiero 3. w szybkości (M7), ale dostarcza raport <b>tak samo kompletny</b> jak Cypress (5/5). TestCafe jest najwolniejszy, a raport ma klasy Selenium (3/5) mimo krótszej instalacji.</p>
+<div class="tip"><b>Praktyka:</b> Cypress i Playwright dają komplet informacji do diagnozy (zrzut + wideo) bez dodatkowej konfiguracji; Selenium i TestCafe wymagają doinstalowania bibliotek na artefakty wizualne — a dla Selenium to wydłużyłoby już najdłuższy pipeline (M5=6).</div>`},
+
+{p:1,cat:"Analiza wyników",q:"Ekosystem i wszechstronność — jakie dwa profile narzędzi wyodrębniłeś?",a:`<p><b>Popularność:</b> Playwright (~130 mln npm, ~82 tys. ★) ≫ Cypress (~28 mln, ~48 tys.) &gt; Selenium (~9 mln, ~31 tys.) &gt; TestCafe (~1 mln, ~9 tys.).</p>
+<h4>Dwa profile (M11–M13)</h4>
+<ul>
+<li><b>Uniwersalne</b> — Playwright i Selenium: 5 przeglądarek (z WebKit/Safari); Playwright dodatkowo API.</li>
+<li><b>Wyspecjalizowane</b> — Cypress (UI+API w jednym, ale 4 przeglądarki, bez Safari/mobile) i TestCafe (jedyne z natywnym mobile, ale bez API).</li>
+</ul>
+<p>Wybór w tej kategorii zależy <b>od profilu projektu</b>: pełne pokrycie przeglądarek? dostęp do urządzeń mobilnych? integracja testów API z UI w jednym narzędziu?</p>`},
+
+{p:1,cat:"Analiza wyników",q:"Który silnik renderujący jest „kością niezgody” i czemu istotny?",a:`<p><b>WebKit</b> (silnik Safari). To on decyduje o liczbie obsługiwanych przeglądarek:</p>
+<ul>
+<li>Selenium, Playwright, TestCafe → <b>5 przeglądarek (z WebKit/Safari)</b>.</li>
+<li>Cypress → <b>4 (bez natywnego Safari)</b>, bo skupia się na silnikach Chromium i Gecko.</li>
+</ul>
+<p>Praktycznie: jeśli projekt musi wspierać Safari/iOS, Cypress wypada słabiej, a Playwright/Selenium/TestCafe dają pełne pokrycie. To realna przesłanka decyzyjna, nie tylko liczba w tabeli.</p>`},
+{p:1,cat:"Wnioski i hipoteza",q:"Jaki jest najważniejszy wniosek pracy?",a:`<p><b>Żadne z czterech narzędzi nie dominuje we wszystkich wymiarach jednocześnie</b> — każde ma wyraźnie inny profil użytkowy wynikający z architektury. Nie ma „uniwersalnego zwycięzcy”.</p>
+<p>Wybór narzędzia powinien wynikać z <b>profilu projektu i priorytetów zespołu</b>, a nie z wyniku w jednej kategorii. Praca daje empiryczną, mierzalną podstawę takiej decyzji — alternatywę dla haseł marketingowych producentów.</p>`},
+
+{p:1,cat:"Wnioski i hipoteza",q:"Podaj rekomendacje: kiedy które narzędzie?",a:`<ul>
+<li><b>Selenium</b> — gdy liczy się <b>niski ślad pamięci</b> i elastyczność (zrównoleglanie na ograniczonym CI), zespół akceptuje większy nakład kodu i wsparcie wielu języków/przeglądarek.</li>
+<li><b>Cypress</b> — gdy priorytetem jest <b>najszybsze sprzężenie zwrotne</b> i bogaty raport w rozwoju iteracyjnym nowoczesnych aplikacji (Chromium/Gecko), z testami API w jednym frameworku.</li>
+<li><b>Playwright</b> — <b>domyślny wybór uniwersalny</b>: szerokie pokrycie przeglądarek (z Safari), API, zwięzły kod, najlepszy ekosystem i przewidywalność; akceptowalny kosztem nieco wolniejszych czasów.</li>
+<li><b>TestCafe</b> — gdy potrzebne są <b>natywne testy mobilne</b> i prosta instalacja bez sterowników; w innych obszarach ustępuje konkurentom.</li>
+</ul>`},
+
+{p:1,cat:"Wnioski i hipoteza",q:"Co pokazują wykresy radarowe w syntezie (rys. 5.9–5.11)?",a:`<p>Pięcioosiowe wykresy (wydajność czasowa, zużycie zasobów, użyteczność, raportowanie, ekosystem i wszechstronność) wizualizują profile:</p>
+<ul>
+<li><b>Selenium</b> — mocny w zasobach, słaby w użyteczności/raportowaniu.</li>
+<li><b>Cypress</b> — szczyt w raportowaniu i czasie zestawu, dół w zużyciu zasobów.</li>
+<li><b>Playwright</b> — najbardziej „okrągły” (zrównoważony), szczyt w ekosystemie, dół w wydajności czasowej.</li>
+<li><b>TestCafe</b> — wąski wielokąt, wyróżnia się tylko wszechstronnością (mobile).</li>
+</ul>
+<p>Różne kształty wielokątów to graficzny dowód braku uniwersalnego zwycięzcy.</p>`},
+
+{p:1,cat:"Ograniczenia badania",q:"Jakie są ograniczenia Twojego badania? (rozdz. 5.7)",a:`<p>Wymieniłem 5 ograniczeń — <b>świadome wskazanie ich to siła pracy</b>:</p>
+<ol>
+<li><b>Jedna aplikacja</b> (React SPA, e-commerce) — wnioski nie przenoszą się automatycznie na SSR, złożoną logikę czy real-time.</li>
+<li><b>Jedno środowisko</b> (jedna maszyna, Windows) — pod Linuksem/macOS lub w kontenerach CI/CD metryki M2/M3/M4 mogą być inne.</li>
+<li><b>10 powtórzeń</b> — wystarcza na średnią i SD, za mało na testy istotności / przedziały ufności.</li>
+<li><b>Pomiar lokalny</b> — szum tła systemu (widoczny w wyższym SD dla CPU/M3).</li>
+<li><b>9 scenariuszy</b> — bez drag&drop, uploadu plików, długich operacji async, iframe.</li>
+</ol>`},
+
+{p:1,cat:"Ograniczenia badania",q:"Jakie wskazałeś kierunki dalszych prac?",a:`<ul>
+<li>Rozszerzenie na <b>inne typy aplikacji</b> (SSR, złożona logika, real-time, iframe, upload, drag&drop).</li>
+<li>Dodatkowe <b>systemy operacyjne i środowiska kontenerowe</b> (Linux, CI/CD).</li>
+<li><b>Więcej powtórzeń</b> → wnioskowanie statystyczne (testy istotności, przedziały ufności).</li>
+<li>Więcej narzędzi (Puppeteer, WebdriverIO, Katalon) i scenariuszy.</li>
+</ul>
+<p>Można dodać też (z uwag recenzentów): <b>walidację z praktykami z przemysłu</b>, systematyczny przegląd literatury (SLR) oraz <b>uwzględnienie roli AI/agentów AI</b> w automatyzacji testów.</p>`},
+{p:1,cat:"Recenzje — pytania trudne",q:"⭐ Recenzent zarzuca brak jawnych pytań badawczych. Jak je sformułujesz?",a:`<p>Przyznaję — praca operuje hipotezą, ale nie wyodrębnia jawnie pytań badawczych. Retrospektywnie wynikają z niej naturalnie:</p>
+<ul>
+<li><b>PB1:</b> Jak badane narzędzia różnią się pod względem wydajności czasowej i zużycia zasobów?</li>
+<li><b>PB2:</b> Jak różnią się pod względem użyteczności (koszt instalacji i objętość kodu)?</li>
+<li><b>PB3:</b> Jak szybko i jak kompletnie raportują defekty?</li>
+<li><b>PB4:</b> Jaka jest ich pozycja w ekosystemie i zakres wszechstronności?</li>
+<li><b>PB5:</b> Czy istnieje narzędzie przeważające we wszystkich aspektach jednocześnie?</li>
+</ul>
+<div class="tip"><b>Strategia:</b> przyznaj brak jawnego zapisu, ale natychmiast pokaż, że badanie faktycznie odpowiada na te 5 pytań — struktura rozdziału 5 (5 kategorii) to wprost ich realizacja.</div>`},
+
+{p:1,cat:"Recenzje — pytania trudne",q:"⭐ Badanie wykonał tylko autor — czy oceny nie są subiektywne i stronnicze?",a:`<p>To trafny zarzut (Miler). Bronię się tak:</p>
+<ul>
+<li><b>Większość metryk jest obiektywna i ilościowa</b> — czas, CPU/RAM, liczba kroków, linie kodu, pobrania npm, gwiazdki, liczba przeglądarek. Tu subiektywizm jest minimalny.</li>
+<li><b>Procedura jest powtarzalna</b> — opisane środowisko, 10 powtórzeń, te same scenariusze i selektory; każdy może to odtworzyć i zweryfikować.</li>
+<li>Subiektywne mogłyby być oceny „miękkie”, dlatego nawet kompletność raportu (M8) <b>zoperacjonalizowałem listą 0–5</b>, a nie „odczuciem”.</li>
+</ul>
+<div class="warn"><b>Czego brakuje (uczciwie):</b> walidacji z praktykami z przemysłu i oceny przez wielu niezależnych testerów. To realne ograniczenie i jednocześnie kierunek dalszych prac — np. ankieta wśród inżynierów QA lub powtórzenie pomiarów przez drugą osobę.</div>`},
+
+{p:1,cat:"Recenzje — pytania trudne",q:"⭐ Czy jedna aplikacja testowa jest reprezentatywna?",a:`<p>Wprost przyznaję to jako ograniczenie (5.7). Argumenty obronne:</p>
+<ul>
+<li>sample-app-web realizuje <b>typowe wzorce e-commerce</b> (logowanie, katalog, sortowanie, koszyk, zamówienie) spotykane w wielu komercyjnych projektach.</li>
+<li>To <b>nowoczesna aplikacja SPA (React)</b> — reprezentatywna dla dużej części dzisiejszego rynku webowego.</li>
+<li>Ma stabilne <code>data-test</code> i konta z defektami — idealna do <b>uczciwego, kontrolowanego</b> porównania.</li>
+</ul>
+<p><b>Ograniczenie:</b> aplikacje SSR, z ciężką logiką biznesową lub real-time mogłyby dać inne wyniki w metrykach wydajnościowych. Dlatego rozszerzenie na inne typy aplikacji wskazałem jako kierunek dalszych prac. Celem było <b>uczciwe porównanie narzędzi</b> na wspólnym, kontrolowanym obiekcie — nie generalizacja na wszystkie typy aplikacji.</p>`},
+
+{p:1,cat:"Recenzje — pytania trudne",q:"⭐ Dlaczego nie zrobiłeś systematycznego przeglądu literatury (SLR)?",a:`<p>Zgadzam się, że SLR (Systematic Literature Review) wzmocniłby pracę i ograniczył ryzyko pominięcia źródeł.</p>
+<h4>Co to SLR i czego zabrakło</h4>
+<p>SLR to <b>sformalizowany protokół</b> przeglądu: zdefiniowane pytania, łańcuchy zapytań w bazach (IEEE, ACM, Scopus), jawne kryteria włączenia/wyłączenia, ekstrakcja danych wg szablonu, ocena jakości. Daje powtarzalność i pełniejsze pokrycie.</p>
+<p><b>Obrona:</b> przeprowadziłem ustrukturyzowany przegląd narracyjny, dzieląc literaturę na 4 nurty i 29 pozycji (w tym 20 artykułów naukowych). To wystarczyło do osadzenia eksperymentu i identyfikacji luk. Pełny SLR to wartościowy, ale osobny wkład — naturalny kierunek rozwinięcia tematu.</p>`},
+
+{p:1,cat:"Recenzje — pytania trudne",q:"⭐ Recenzent: brak jawnej analizy zagrożeń wiarygodności (validity threats). Co byś dodał?",a:`<p>Mam rozdział 5.7 „Ograniczenia”, ale recenzent słusznie oczekuje <b>klasycznej taksonomii zagrożeń wiarygodności</b> (Wohlin). Tak bym je uporządkował:</p>
+<ul>
+<li><b>Trafność wewnętrzna</b> — szum tła systemu, kolejność uruchomień, cache. Mitigacja: 10 powtórzeń, wyłączone aplikacje, izolacja procesów.</li>
+<li><b>Trafność zewnętrzna</b> (uogólnialność) — jedna aplikacja, jedno OS, jedna maszyna → ograniczona generalizacja.</li>
+<li><b>Trafność konstruktu</b> — czy metryki mierzą to, co deklarują (np. M9 npm to proxy popularności, nie liczba użytkowników).</li>
+<li><b>Trafność wnioskowania (conclusion)</b> — 10 powtórzeń to za mało na testy istotności statystycznej.</li>
+</ul>
+<div class="tip">Na obronie warto wymienić te 4 kategorie z nazwy — pokazuje znajomość metodologii badań empirycznych w inżynierii oprogramowania.</div>`},
+
+{p:1,cat:"Recenzje — pytania trudne",q:"⭐ Recenzent: wyniki w osobnych tabelach 4.1–4.4 utrudniają porównanie. Co na to?",a:`<p>Przyznaję rację. W rozdziale 4 dane są <b>per narzędzie</b> (tabele 4.1–4.4), bo to rozdział <em>rejestracji</em> pomiarów — każde narzędzie opisuję osobno wraz z procedurą.</p>
+<p><b>Obrona:</b> właściwe <b>zestawienie porównawcze</b> jest w rozdziale 5 — wykresy zbiorcze (rys. 5.1, 5.2, 5.5–5.9) i wykresy radarowe nakładają wszystkie narzędzia na wspólne osie. Gdybym redagował ponownie, dodałbym <b>jedną zbiorczą tabelę 4×13</b> (narzędzia w kolumnach, metryki w wierszach) na końcu rozdziału 4 — to drobna, łatwa poprawka, która od razu ułatwia porównanie.</p>`},
+
+{p:1,cat:"Recenzje — pytania trudne",q:"⭐ Recenzent: za dużo miejsca na instalacji, za mało na implementacji scenariuszy. Bronisz tego?",a:`<p>Częściowo się zgadzam. Pokazałem tylko wybrane implementacje (rys. 4.6–4.10), a opisy instalacji są szczegółowe.</p>
+<h4>Obrona</h4>
+<ul>
+<li>Opis instalacji <b>nie jest „watą”</b> — to bezpośrednie źródło metryki <b>M5 (liczba kroków instalacji)</b>, więc musi być udokumentowany i porównywalny.</li>
+<li>Pełny kod 9 scenariuszy × 4 narzędzia to dziesiątki plików — w pracy pokazałem <b>reprezentatywne fragmenty</b> ilustrujące różnice API, a całość kodu jest dostępna w repozytorium.</li>
+</ul>
+<div class="warn"><b>Co bym poprawił:</b> przeniósł szczegóły instalacji do załącznika, a w głównym tekście dał więcej porównań kodu (np. ten sam fragment SC-06 w 4 narzędziach obok siebie) + link/załącznik z pełnym repo.</div>`},
+
+{p:1,cat:"Recenzje — pytania trudne",q:"⭐ Recenzent (Kuchta): wymiar „ekosystem i wszechstronność” miesza dwie rzeczy. Zgadzasz się?",a:`<p>To zasadna uwaga. Piąty wymiar łączy <b>popularność</b> (M9 pobrania, M10 gwiazdki) z <b>wszechstronnością</b> (M11 przeglądarki, M12 mobile, M13 API) — a to dwa różne pojęcia.</p>
+<h4>Obrona i poprawka</h4>
+<ul>
+<li>Połączyłem je dla <b>czytelności wykresu radarowego</b> (5 osi zamiast 6) i dlatego, że oba opisują „pozycję narzędzia w szerszym otoczeniu”.</li>
+<li>Zgadzam się jednak, że <b>rozdzielenie na 6. oś</b> byłoby czystsze: „Popularność/dojrzałość” (M9, M10) i osobno „Wszechstronność” (M11–M13). Dane na to pozwalają — to kwestia prezentacji, nie ponownych pomiarów.</li>
+</ul>
+<p>Co ciekawe, te wymiary mogą iść w przeciwnych kierunkach: TestCafe ma <b>wysoką wszechstronność</b> (mobile), ale <b>najniższą popularność</b> — łączenie ich uśrednia tę informację, co potwierdza słuszność uwagi.</p>`},
+
+{p:1,cat:"Recenzje — pytania trudne",q:"⭐ Czemu pominąłeś rolę sztucznej inteligencji i agentów AI?",a:`<p>Słuszna uwaga Milera — to gorący, aktualny temat. Jak AI zmienia automatyzację testów:</p>
+<ul>
+<li><b>Self-healing locators</b> — AI automatycznie naprawia selektory po zmianie UI (mniej „flaky tests”).</li>
+<li><b>Generowanie testów</b> — LLM tworzy scenariusze z opisu w języku naturalnym lub z nagrania; Playwright ma codegen, a kierunek to agenci piszący i utrzymujący testy.</li>
+<li><b>Agenci AI / MCP</b> — np. Playwright MCP pozwala agentowi sterować przeglądarką; testy stają się intencją, nie kodem.</li>
+<li><b>Analiza wyników</b> — AI klasyfikuje przyczyny niepowodzeń i odróżnia regresję od flaky.</li>
+</ul>
+<div class="tip"><b>Jak rozszerzyć pracę:</b> dodać metrykę „wsparcie funkcji AI” do wymiaru ekosystemu albo osobny rozdział o tym, jak AI wpływa na koszt utrzymania testów. To naturalny kierunek dalszych badań.</div>`},
+
+{p:1,cat:"Recenzje — pytania trudne",q:"⭐ Recenzent: brak definicji pojęć i konceptualizacji. Zdefiniuj kluczowe pojęcia.",a:`<ul>
+<li><b>Efektywność narzędzia</b> — w tej pracy: zdolność do realizacji testów małym kosztem czasu i zasobów przy dobrej jakości feedbacku (operacjonalizowana metrykami M1–M8).</li>
+<li><b>Przydatność praktyczna</b> — dopasowanie profilu narzędzia do priorytetów i kontekstu projektu (wydajność vs raportowanie vs wszechstronność).</li>
+<li><b>Wszechstronność</b> — zakres zastosowań: liczba przeglądarek, wsparcie mobile i API (M11–M13).</li>
+<li><b>Użyteczność</b> — koszt wejścia i utrzymania: kroki instalacji (M5) i objętość kodu (M6).</li>
+<li><b>Test E2E</b> — weryfikacja pełnej ścieżki użytkownika przez interfejs aplikacji.</li>
+</ul>
+<p>Przyznaję: w pracy te definicje są <b>rozproszone i dorozumiane</b> przez metryki, a nie zebrane w jednej sekcji „konceptualizacja”. To słuszna uwaga redakcyjna.</p>`},
+
+{p:1,cat:"Recenzje — pytania trudne",q:"⭐ Czy Twoje wyniki zgadzają się z literaturą? (recenzent: brak porównania)",a:`<p>Mogę to odnieść do cytowanych prac — i warto to zrobić na obronie:</p>
+<ul>
+<li><b>García i in. (2024)</b> i <b>Pasławski</b>: Playwright bywa najszybszy czasowo, ale generuje większe obciążenie — u mnie Playwright jest <b>wolniejszy czasowo</b>, za to ma <b>najniższe CPU</b>. Różnica wynika z innego środowiska i sposobu pomiaru (proces narzędzia vs całość).</li>
+<li><b>Gosik, Miłosz (2025)</b>: przewaga Playwright w wielu wymiarach i mniejsza wariancja — u mnie Playwright też ma <b>najbardziej przewidywalny</b> czas wykrycia błędu.</li>
+<li><b>Wniosek wspólny z literaturą</b> (np. García): „brak jednoznacznego zwycięzcy, wybór zależy od projektu” — moje wyniki to potwierdzają.</li>
+</ul>
+<div class="warn">Przyznaję: w pracy brakuje osobnej sekcji „porównanie z wynikami innych badań”. To słuszna uwaga i łatwe uzupełnienie.</div>`},
+
+{p:1,cat:"Recenzje — pytania trudne",q:"Jakie oceny dostałeś i co recenzenci uznali za mocne strony?",a:`<p>Obie recenzje (dr inż. Jakub Miler, dr inż. Jarosław Kuchta): <b>ocena 4</b>.</p>
+<h4>Mocne strony (wg recenzentów)</h4>
+<ul>
+<li>Aktualny, istotny problem badawczy.</li>
+<li>Eksperymentalne zbadanie 4 współczesnych narzędzi prawidłową metodą.</li>
+<li>Szeroki, dobrze dobrany zestaw <b>13 metryk</b> z różnych kategorii (Kuchta: „ani za mało, ani za dużo”).</li>
+<li>9 scenariuszy, w tym z defektami; dobra synteza (wykresy radarowe).</li>
+<li>Jawnie spisane ograniczenia; poprawna literatura i język.</li>
+</ul>
+<p><b>Słabe strony</b> (do których masz tu osobne pytania): brak jawnych pytań badawczych, jedno środowisko/aplikacja, brak SLR, brak walidacji z praktykami, pominięcie AI, łączenie wymiaru ekosystem+wszechstronność, uzasadnienie wyboru narzędzi.</p>`},
+{p:2,cat:"Testowanie oprogramowania",q:"Czym jest piramida testów i jak się ma do testów E2E?",a:`<p><b>Piramida testów</b> (Mike Cohn) to model proporcji typów testów:</p>
+<ul>
+<li><b>Testy jednostkowe</b> (podstawa, najwięcej) — szybkie, tanie, izolują pojedyncze funkcje/klasy.</li>
+<li><b>Testy integracyjne</b> (środek) — weryfikują współpracę modułów.</li>
+<li><b>Testy E2E/UI</b> (szczyt, najmniej) — najwolniejsze i najdroższe, ale najbliższe perspektywie użytkownika.</li>
+</ul>
+<p>Wniosek: E2E powinno być niewiele, dla kluczowych ścieżek. Antywzorzec to „rożek lodowy” (ice-cream cone) — za dużo E2E, za mało jednostkowych → wolny, kruchy zestaw. Moja praca dotyczy szczytu piramidy (E2E).</p>`},
+
+{p:2,cat:"Testowanie oprogramowania",q:"Wyjaśnij różnicę: testy jednostkowe, integracyjne, systemowe, akceptacyjne.",a:`<ul>
+<li><b>Jednostkowe (unit)</b> — pojedyncza jednostka kodu w izolacji (mock zależności).</li>
+<li><b>Integracyjne</b> — współpraca kilku modułów / z bazą / z API.</li>
+<li><b>Systemowe</b> — cały system jako całość, w środowisku zbliżonym do produkcji.</li>
+<li><b>Akceptacyjne (UAT)</b> — czy system spełnia wymagania biznesowe; często z udziałem klienta.</li>
+</ul>
+<p>Wymiar prostopadły: <b>funkcjonalne</b> (co system robi) vs <b>niefunkcjonalne</b> (wydajność, bezpieczeństwo, użyteczność).</p>`},
+
+{p:2,cat:"Testowanie oprogramowania",q:"Black-box vs white-box vs gray-box.",a:`<ul>
+<li><b>Black-box</b> — testujemy zachowanie przez wejście/wyjście, bez znajomości kodu (np. testy E2E). Techniki: klasy równoważności, wartości brzegowe, tablice decyzyjne.</li>
+<li><b>White-box</b> — znamy strukturę kodu, mierzymy pokrycie (instrukcji, gałęzi, ścieżek).</li>
+<li><b>Gray-box</b> — częściowa znajomość wnętrza (np. struktury bazy) przy testowaniu z zewnątrz.</li>
+</ul>
+<p>Moje testy są <b>black-box</b> (E2E z perspektywy użytkownika), choć selektory <code>data-test</code> wymagają minimalnej wiedzy o strukturze (element gray-box).</p>`},
+
+{p:2,cat:"Testowanie oprogramowania",q:"Co to są testy regresji i dlaczego automatyzacja ma tu największy sens?",a:`<p><b>Test regresji</b> sprawdza, czy nowe zmiany nie zepsuły działającej wcześniej funkcjonalności.</p>
+<p>Automatyzacja jest tu najbardziej opłacalna, bo te same scenariusze uruchamia się <b>wielokrotnie</b> po każdej zmianie — ręczne powtarzanie byłoby kosztowne i podatne na błędy. Stąd w pracy podkreślam testy regresyjne, integracyjne i powtarzalne scenariusze funkcjonalne jako obszar największych korzyści z automatyzacji.</p>`},
+
+{p:2,cat:"Testowanie oprogramowania",q:"Co to są „flaky tests” i jak narzędzia z pracy je ograniczają?",a:`<p><b>Flaky test</b> — test, który raz przechodzi, raz nie, bez zmian w kodzie (niedeterministyczny). Przyczyny: wyścigi czasowe, oczekiwanie na asynchroniczne elementy, zależności między testami, sieć.</p>
+<h4>Jak ograniczają to badane narzędzia</h4>
+<ul>
+<li><b>Auto-waiting</b> — Playwright, Cypress, TestCafe same czekają na gotowość elementu (eliminują sztywne <code>sleep</code>).</li>
+<li><b>Asercje z retry</b> — <code>should()</code> (Cypress), web-first <code>expect()</code> (Playwright).</li>
+<li><b>Izolacja</b> — fixtures/osobny kontekst (Playwright), reset stanu (Cypress).</li>
+<li>Selenium wymaga ręcznego <code>driver.wait(until...)</code> — większe ryzyko flaky przy braku staranności.</li>
+</ul>`},
+
+{p:2,cat:"Testowanie oprogramowania",q:"Co to pokrycie kodu (code coverage) i jego rodzaje? Czy 100% = dobre testy?",a:`<p><b>Pokrycie</b> mierzy, jaka część kodu jest wykonana przez testy: pokrycie <b>instrukcji</b>, <b>gałęzi</b> (if/else), <b>funkcji</b>, <b>ścieżek</b>.</p>
+<p><b>100% ≠ brak błędów.</b> Wysokie pokrycie mówi, że kod się wykonał, ale nie że asercje są sensowne ani że pokryto wszystkie przypadki brzegowe i logiczne. To metryka pomocnicza, nie cel sam w sobie. (W projekcie aplikacji testowej wymagane jest 100% pokrycia testów jednostkowych — ciekawy kontrast z testami E2E z mojej pracy.)</p>`},
+
+{p:2,cat:"Testowanie oprogramowania",q:"TDD vs BDD — na czym polegają?",a:`<ul>
+<li><b>TDD (Test-Driven Development)</b> — cykl <b>red–green–refactor</b>: najpierw test (czerwony), potem minimalny kod (zielony), potem refaktoryzacja. Test napędza projekt kodu.</li>
+<li><b>BDD (Behavior-Driven Development)</b> — opis zachowania w języku zbliżonym do naturalnego (Gherkin: <code>Given–When–Then</code>), zrozumiały także dla biznesu. Narzędzia: Cucumber.</li>
+</ul>
+<p>Struktura moich testów (<code>describe</code>/<code>it</code> w Cypress, blok testowy w innych) wywodzi się z frameworków typu Mocha i jest bliska stylowi BDD (czytelne opisy).</p>`},
+
+{p:2,cat:"Testowanie oprogramowania",q:"Czym jest testowanie mutacyjne?",a:`<p><b>Testowanie mutacyjne</b> ocenia <em>jakość samych testów</em>: do kodu wprowadza się drobne zmiany („mutanty”, np. zamiana <code>+</code> na <code>-</code>) i sprawdza, czy testy je wykryją (czy „zabiją mutanta”). Im więcej mutantów wykrytych, tym lepszy zestaw testów.</p>
+<p>To nawiązuje do mojej pracy: zamiast mutacji automatycznych użyłem <b>celowo wprowadzonych defektów (D1–D3)</b>, by ocenić zdolność narzędzi do wykrywania błędów — pokrewna idea „wstrzykiwania błędów”.</p>`},
+{p:2,cat:"Inżynieria oprogramowania",q:"Model kaskadowy vs zwinny (Agile) — różnice i kiedy który?",a:`<ul>
+<li><b>Kaskadowy (waterfall)</b> — sekwencyjne fazy (wymagania → projekt → implementacja → testy → wdrożenie). Dobry przy stabilnych, dobrze znanych wymaganiach; słaby przy zmianach.</li>
+<li><b>Agile</b> — iteracyjno-przyrostowy, krótkie cykle, ciągła informacja zwrotna od klienta, gotowość na zmiany (Manifest Agile). Lepszy przy niepewnych/zmiennych wymaganiach.</li>
+</ul>
+<p>Automatyzacja testów (temat pracy) jest <b>warunkiem</b> sprawnego Agile/CI/CD — pozwala szybko weryfikować zmiany w krótkich cyklach.</p>`},
+
+{p:2,cat:"Inżynieria oprogramowania",q:"Czym jest Scrum? Role, zdarzenia, artefakty.",a:`<p><b>Scrum</b> — ramy zwinne oparte na iteracjach (sprintach, zwykle 1–4 tyg.).</p>
+<ul>
+<li><b>Role:</b> Product Owner (priorytety, backlog), Scrum Master (proces, usuwanie przeszkód), Zespół Deweloperski.</li>
+<li><b>Zdarzenia:</b> Sprint Planning, Daily Scrum, Sprint Review, Sprint Retrospective.</li>
+<li><b>Artefakty:</b> Product Backlog, Sprint Backlog, Increment (przyrost).</li>
+</ul>
+<p>„Definition of Done” często obejmuje przejście testów automatycznych — łącznik z tematem pracy.</p>`},
+
+{p:2,cat:"Inżynieria oprogramowania",q:"Co to CI/CD i jak wiąże się z testami automatycznymi?",a:`<ul>
+<li><b>CI (Continuous Integration)</b> — częste scalanie zmian do wspólnej gałęzi, z automatycznym budowaniem i testami przy każdym commicie/PR.</li>
+<li><b>CD (Continuous Delivery/Deployment)</b> — automatyczne przygotowanie do wdrożenia / automatyczne wdrożenie na produkcję.</li>
+</ul>
+<p>Testy automatyczne to <b>bramka jakości</b> w potoku CI/CD. Dlatego w pracy ważne są metryki wydajności i zasobów — w CI testy uruchamiają się często i równolegle, więc czas i zużycie RAM (np. lekki Selenium vs ciężki Cypress) wprost przekładają się na koszt i przepustowość pipeline'u.</p>`},
+
+{p:2,cat:"Inżynieria oprogramowania",q:"Zasady SOLID — wymień i krótko wyjaśnij.",a:`<ul>
+<li><b>S</b> — Single Responsibility: klasa ma jeden powód do zmiany.</li>
+<li><b>O</b> — Open/Closed: otwarte na rozszerzenie, zamknięte na modyfikację.</li>
+<li><b>L</b> — Liskov Substitution: podtyp zastępuje typ bazowy bez psucia programu.</li>
+<li><b>I</b> — Interface Segregation: wiele wąskich interfejsów zamiast jednego szerokiego.</li>
+<li><b>D</b> — Dependency Inversion: zależność od abstrakcji, nie od konkretów.</li>
+</ul>
+<p>W testach pokrewny jest wzorzec <b>Page Object</b> (cytowany w pracy — Leotta i in.) — oddziela logikę testu od selektorów strony, zwiększając utrzymywalność.</p>`},
+
+{p:2,cat:"Programowanie i web",q:"Jak działa asynchroniczność w JavaScript (event loop, Promise, async/await)?",a:`<p>JS jest <b>jednowątkowy</b>; współbieżność realizuje <b>pętla zdarzeń (event loop)</b>: operacje asynchroniczne (I/O, timery) trafiają do kolejek (makro/mikro-zadania), a wynik wraca, gdy stos jest pusty.</p>
+<ul>
+<li><b>Promise</b> — obiekt reprezentujący przyszły wynik (pending/fulfilled/rejected).</li>
+<li><b>async/await</b> — cukier składniowy nad Promise; <code>await</code> „pauzuje” funkcję do rozwiązania obietnicy.</li>
+</ul>
+<p>To kluczowe dla pracy: <b>Selenium i Playwright</b> używają <code>async/await</code> jawnie, a <b>Cypress</b> ma własną kolejkę poleceń (bez async/await) — różnica wprost wpływa na styl i długość kodu.</p>`},
+
+{p:2,cat:"Programowanie i web",q:"Co to jest DOM i dlaczego jest ważny w testach E2E?",a:`<p><b>DOM (Document Object Model)</b> — drzewiasta reprezentacja struktury strony (elementy jako węzły), którą skrypty mogą odczytywać i modyfikować.</p>
+<p>Testy E2E działają na DOM: <b>lokalizują</b> elementy (selektory CSS/XPath/<code>data-test</code>), wykonują <b>akcje</b> (klik, wpisanie tekstu) i <b>asercje</b> (czy element jest widoczny). Dynamiczne zmiany DOM (SPA) wymuszają mechanizmy oczekiwania — stąd znaczenie auto-waitingu w nowoczesnych narzędziach.</p>`},
+
+{p:2,cat:"Programowanie i web",q:"SPA vs aplikacja wielostronicowa (MPA) — co to i czemu ważne dla testów?",a:`<ul>
+<li><b>SPA (Single Page Application)</b> — jedna strona HTML, treść renderowana dynamicznie po stronie klienta (React, Angular). Nawigacja bez pełnego przeładowania.</li>
+<li><b>MPA</b> — każda podstrona to osobny dokument ładowany z serwera (często SSR).</li>
+</ul>
+<p>Aplikacja w mojej pracy to <b>SPA w React</b>. To istotne: w SPA elementy pojawiają się asynchronicznie, więc auto-waiting i asercje z retry są kluczowe; pomiary wydajności mogą się różnić dla aplikacji SSR (wskazane jako ograniczenie).</p>`},
+
+{p:2,cat:"Programowanie i web",q:"Czym jest REST API i podstawowe metody/kody HTTP?",a:`<p><b>REST</b> — styl architektury usług sieciowych; zasoby identyfikowane URL-ami, operacje przez metody HTTP, komunikacja bezstanowa, zwykle JSON.</p>
+<ul>
+<li><b>Metody:</b> GET (odczyt), POST (utwórz), PUT/PATCH (aktualizuj), DELETE (usuń).</li>
+<li><b>Kody:</b> 2xx sukces (200, 201), 3xx przekierowania, 4xx błąd klienta (400, 401, 403, 404), 5xx błąd serwera (500).</li>
+</ul>
+<p>Związek z pracą: <b>Cypress</b> (<code>cy.request</code>) i <b>Playwright</b> (kontekst <code>request</code>) wspierają testy API natywnie (M13), Selenium i TestCafe nie.</p>`},
+
+{p:2,cat:"Programowanie i web",q:"Czym jest React i czym jest „virtual DOM”?",a:`<p><b>React</b> — biblioteka JS do budowy interfejsów z <b>komponentów</b>, deklaratywnie (opisujesz <em>jak ma wyglądać</em> UI dla danego stanu).</p>
+<p><b>Virtual DOM</b> — lekka, pamięciowa reprezentacja DOM. React liczy różnicę (reconciliation/diff) między starym a nowym virtual DOM i aktualizuje tylko zmienione fragmenty realnego DOM → wydajność. Aplikacja testowa w pracy jest napisana w React 17.</p>`},
+{p:2,cat:"Bazy danych, sieci, OS",q:"Bazy relacyjne (SQL) vs NoSQL — różnice i kiedy które?",a:`<ul>
+<li><b>SQL (relacyjne)</b> — dane w tabelach o sztywnym schemacie, relacje, język SQL, transakcje ACID. Dobre dla danych ustrukturyzowanych i spójności (finanse, e-commerce).</li>
+<li><b>NoSQL</b> — elastyczny schemat: dokumentowe (MongoDB), klucz-wartość (Redis), kolumnowe (Cassandra), grafowe (Neo4j). Dobre dla skali, dużej zmienności struktury, big data; często model BASE i spójność ostateczna.</li>
+</ul>`},
+
+{p:2,cat:"Bazy danych, sieci, OS",q:"Co oznacza ACID?",a:`<ul>
+<li><b>A — Atomicity</b> (atomowość): transakcja w całości albo wcale.</li>
+<li><b>C — Consistency</b> (spójność): baza przechodzi z jednego poprawnego stanu w inny.</li>
+<li><b>I — Isolation</b> (izolacja): równoległe transakcje nie zakłócają się wzajemnie.</li>
+<li><b>D — Durability</b> (trwałość): zatwierdzone dane przetrwają awarię.</li>
+</ul>
+<p>Przeciwwaga w NoSQL to <b>BASE</b> (Basically Available, Soft state, Eventual consistency).</p>`},
+
+{p:2,cat:"Bazy danych, sieci, OS",q:"Po co indeksy w bazie i jaki jest ich koszt?",a:`<p><b>Indeks</b> (zwykle B-drzewo) przyspiesza wyszukiwanie wierszy po danej kolumnie — z przeszukiwania liniowego O(n) do ~O(log n).</p>
+<p><b>Koszt:</b> dodatkowe miejsce na dysku i wolniejsze operacje zapisu (INSERT/UPDATE/DELETE muszą aktualizować indeks). Dlatego indeksuje się kolumny często używane w <code>WHERE</code>/<code>JOIN</code>, a nie wszystkie.</p>`},
+
+{p:2,cat:"Bazy danych, sieci, OS",q:"Model OSI a TCP/IP — co warto wiedzieć?",a:`<p><b>OSI</b> ma 7 warstw (fizyczna, łącza danych, sieciowa, transportowa, sesji, prezentacji, aplikacji). <b>TCP/IP</b> upraszcza do 4 (dostępu do sieci, internetowa, transportowa, aplikacji).</p>
+<ul>
+<li><b>Transportowa:</b> TCP (połączeniowy, niezawodny, kontrola przepływu) vs UDP (bezpołączeniowy, szybki, bez gwarancji).</li>
+<li><b>Aplikacji:</b> HTTP/HTTPS, DNS, FTP. Testy webowe operują głównie na HTTP(S).</li>
+</ul>`},
+
+{p:2,cat:"Bazy danych, sieci, OS",q:"Proces vs wątek — różnica i znaczenie dla zrównoleglania testów.",a:`<ul>
+<li><b>Proces</b> — niezależny program z własną przestrzenią adresową.</li>
+<li><b>Wątek</b> — lżejsza jednostka wykonania <em>w obrębie</em> procesu, współdzieli pamięć z innymi wątkami.</li>
+</ul>
+<p>Związek z pracą: równoległe uruchamianie testów (procesy/wątki, instancje przeglądarek) zwiększa przepustowość, ale mnoży zużycie RAM. Stąd <b>ślad pamięciowy narzędzia (M4)</b> decyduje o skalowalności na współdzielonym CI/CD — Selenium (555 MB) skaluje się lepiej niż Cypress/TestCafe (~966 MB).</p>`},
+
+{p:2,cat:"Bazy danych, sieci, OS",q:"Czym jest HTTP i dlaczego HTTPS? Czym jest „bezstanowość”?",a:`<p><b>HTTP</b> — protokół żądanie–odpowiedź warstwy aplikacji. <b>Bezstanowy</b> — serwer nie pamięta poprzednich żądań; stan utrzymują ciasteczka, tokeny, sesje (aplikacja w pracy używa m.in. ciasteczek do koszyka).</p>
+<p><b>HTTPS</b> = HTTP + TLS: szyfrowanie (poufność), integralność i uwierzytelnienie serwera (certyfikat). Chroni przed podsłuchem i modyfikacją w tranzycie.</p>`},
+{p:3,cat:"Dane przestrzenne i fotogrametria (Kulawiak)",q:"Co to jest GIS i jakie pełni funkcje?",a:`<p><b>GIS (Geographic Information System / System Informacji Geograficznej)</b> — system do gromadzenia, przechowywania, przetwarzania, analizy i prezentacji <b>danych przestrzennych</b> (z odniesieniem do położenia na Ziemi) wraz z atrybutami opisowymi.</p>
+<h4>Główne funkcje</h4>
+<ul>
+<li><b>Zarządzanie bazą danych</b> (dodawanie, modyfikacja, usuwanie).</li>
+<li><b>Integracja</b> danych tabelarycznych, wektorowych, rastrowych z różnych źródeł.</li>
+<li><b>Wyszukiwanie</b> wg cech przestrzennych i nieprzestrzennych.</li>
+<li><b>Analiza</b> — statystyczna, przestrzenna, topologiczna, geokodowanie, transformacje współrzędnych, rektyfikacja.</li>
+<li><b>Prezentacja</b> — mapy tematyczne, wizualizacje 3D, raporty, wykresy.</li>
+</ul>`},
+
+{p:3,cat:"Dane przestrzenne i fotogrametria (Kulawiak)",q:"Model wektorowy vs rastrowy danych przestrzennych.",a:`<table><tr><th>Cecha</th><th>Wektorowy</th><th>Rastrowy</th></tr>
+<tr><td>Reprezentacja</td><td>punkty, linie, poligony (współrzędne)</td><td>siatka pikseli (komórek)</td></tr>
+<tr><td>Rozmiar danych</td><td>mały (tylko współrzędne i ID)</td><td>duży (każda komórka)</td></tr>
+<tr><td>Pozyskanie</td><td>pracochłonne, kosztowne</td><td>szybkie (np. obraz satelitarny)</td></tr>
+<tr><td>Skala/rozdzielczość</td><td>praktycznie nieograniczona</td><td>ograniczona rozdzielczością sensora</td></tr>
+<tr><td>Modelowanie obiektów</td><td>pełne (atrybuty na obiekt)</td><td>słabe (obiekt = zbiór pikseli)</td></tr></table>
+<p>Wektor — granice działek, sieci uzbrojenia; raster — zdjęcia, modele terenu, analizy ciągłych zjawisk.</p>`},
+
+{p:3,cat:"Dane przestrzenne i fotogrametria (Kulawiak)",q:"⭐ Czym jest fotogrametria i jakie wyróżnia się orientacje zdjęć?",a:`<p><b>Fotogrametria</b> — nauka i technologia pozyskiwania <b>wiarygodnych informacji o obiektach i terenie na podstawie zdjęć</b> (pomiar geometrii i położenia obiektów ze zdjęć), bez kontaktu fizycznego.</p>
+<h4>Cztery orientacje (kluczowe na egzaminie)</h4>
+<ul>
+<li><b>Wewnętrzna</b> — zależna od kamery (np. ogniskowa, punkt główny, dystorsja).</li>
+<li><b>Zewnętrzna</b> — położenie i orientacja kliszy/sensora w przestrzeni w chwili zdjęcia.</li>
+<li><b>Wzajemna stereogramu</b> — powiązanie geometryczne dwóch zdjęć (pary stereo).</li>
+<li><b>Bezwzględna modelu</b> — wpasowanie modelu w układ współrzędnych i nadanie skali.</li>
+</ul>
+<p>Zdjęcia dzielimy na <b>pionowe</b> (oś optyczna prawie prostopadła, odchylenie ≤3° → niemal jednolita skala = „mapa na kliszy”) i <b>nachylone</b> (większy obszar, perspektywa).</p>`},
+
+{p:3,cat:"Dane przestrzenne i fotogrametria (Kulawiak)",q:"Czym jest teledetekcja i jaka jest różnica między aktywną a pasywną?",a:`<p><b>Teledetekcja</b> — pozyskiwanie informacji o obiektach <b>na odległość</b>, przez pomiar i analizę odbitej/emitowanej energii (elektromagnetycznej lub akustycznej). <b>Fotointerpretacja</b> (analiza zdjęć w celu identyfikacji obiektów) jest jej częścią.</p>
+<ul>
+<li><b>Aktywna</b> — urządzenie <em>samo emituje</em> falę i mierzy odbicie (radar, LIDAR). Działa niezależnie od światła słonecznego.</li>
+<li><b>Pasywna</b> — mierzy tylko promieniowanie własne obiektów lub odbite światło słoneczne (większość obrazów optycznych satelitarnych).</li>
+</ul>`},
+
+{p:3,cat:"Dane przestrzenne i fotogrametria (Kulawiak)",q:"Jakie rodzaje rozdzielczości obrazu satelitarnego rozróżniamy?",a:`<ul>
+<li><b>Przestrzenna</b> — wielkość terenu odpowiadająca jednemu pikselowi (im wyższa, tym mniejszy obszar na zdjęciu).</li>
+<li><b>Czasowa</b> — jak często satelita może sfotografować to samo miejsce (np. Landsat ~16 dni, SPOT ~26 dni, NOAA ~godziny).</li>
+<li><b>Spektralna</b> — liczba i szerokość zakresów widma rejestrowanych przez sensor.</li>
+<li><b>Radiometryczna (kwantyzacji)</b> — liczba poziomów jasności (np. 256 = 8 bitów).</li>
+</ul>
+<p>Występuje kompromis: wyższa rozdzielczość przestrzenna → mniejszy zasięg zdjęcia i wyższe wymagania sensora.</p>`},
+
+{p:3,cat:"Dane przestrzenne i fotogrametria (Kulawiak)",q:"Co to LIDAR i jakie są rodzaje skaningu laserowego?",a:`<p><b>LIDAR (LIght Detection And Ranging)</b> — aktywna metoda teledetekcji: emisja impulsu laserowego i pomiar czasu powrotu → precyzyjna chmura punktów 3D (np. numeryczny model terenu, modele budynków).</p>
+<h4>Rodzaje skaningu wg platformy</h4>
+<ul>
+<li>naziemny, lotniczy, mobilny, podwodny, satelitarny.</li>
+</ul>
+<p>Zaleta: gęsta, dokładna geometria 3D, działa także przez przerwy w roślinności.</p>`},
+
+{p:3,cat:"Dane przestrzenne i fotogrametria (Kulawiak)",q:"Standardy danych przestrzennych: GML, KML, WMS/WFS/WCS, Shapefile.",a:`<ul>
+<li><b>Shapefile</b> — popularny format wektorowy (Esri), zestaw plików (.shp/.shx/.dbf).</li>
+<li><b>GML (Geography Markup Language)</b> — rozszerzenie XML do modelowania i wymiany danych przestrzennych (OGC); używane przez WFS.</li>
+<li><b>KML</b> — format XML do wizualizacji 3D (Google Earth/Maps); KMZ to skompresowany KML.</li>
+<li><b>Usługi sieciowe OGC:</b> <b>WMS</b> (mapy jako obrazy), <b>WFS</b> (obiekty wektorowe), <b>WCS</b> (dane rastrowe/pokrycia), <b>CSW</b> (katalog metadanych).</li>
+</ul>
+<p>Standaryzacja + metadane = interoperacyjność i współużytkowanie danych między systemami GIS.</p>`},
+
+{p:3,cat:"Dane przestrzenne i fotogrametria (Kulawiak)",q:"Skąd biorą się zniekształcenia geometryczne obrazów satelitarnych i jak się je usuwa?",a:`<p>Przyczyny zniekształceń: <b>ruch satelity</b> (drgania, zmiany wysokości), <b>ruch Ziemi</b> (obrót pod satelitą), <b>ruch elementów sensora</b> (np. nierównomierny przesuw lustra skanującego) oraz <b>kształt Ziemi</b> (rzut 3D na 2D).</p>
+<p>Korekcja: przypisanie układu współrzędnych, przekształcenia geometryczne i <b>przepróbkowanie (resampling)</b>. Poziomy przetworzenia: 0 (surowe) → 1/2 (korekcje radiometryczna/atmosferyczna/geometryczna) → 3 (geokodowane, z układem współrzędnych).</p>`},
+
+{p:3,cat:"Dane przestrzenne i fotogrametria (Kulawiak)",q:"Czym jest pokrycie podłużne i poprzeczne zdjęć lotniczych?",a:`<p>Przy nalotach fotogrametrycznych zdjęcia muszą się <b>nakładać</b>, by umożliwić obróbkę stereoskopową i tworzenie ciągłych map:</p>
+<ul>
+<li><b>Pokrycie podłużne</b> — nakładanie kolejnych zdjęć w <b>jednym szeregu</b> (wzdłuż przelotu), typowo ~60%.</li>
+<li><b>Pokrycie poprzeczne</b> — nakładanie sąsiednich <b>szeregów</b> (zespół zdjęć), typowo ~30%.</li>
+</ul>
+<p><b>Szereg</b> = zdjęcia z jednego przelotu; <b>zespół</b> = zbiór szeregów pokrytych poprzecznie. Para zdjęć tego samego obszaru pod różnym kątem to <b>stereopara</b> (obraz 3D).</p>`},
+{p:3,cat:"Sieciowe technologie mobilne (Kulawiak)",q:"Generacje sieci komórkowych 1G–5G — co je odróżnia?",a:`<table><tr><th>Gen.</th><th>Cecha kluczowa</th><th>Technologie</th></tr>
+<tr><td>1G</td><td>analogowy głos</td><td>AMPS, NMT</td></tr>
+<tr><td>2G</td><td>cyfrowy głos + SMS</td><td>GSM, GPRS/EDGE (2.5G)</td></tr>
+<tr><td>3G</td><td>transmisja danych, mobilny internet</td><td>UMTS, HSPA</td></tr>
+<tr><td>4G</td><td>szybki internet, all-IP</td><td>LTE, LTE-Advanced</td></tr>
+<tr><td>5G</td><td>duże pasmo, niskie opóźnienia, masowe IoT</td><td>5G NR</td></tr></table>
+<p>5G to trzy scenariusze: <b>eMBB</b> (szybki internet), <b>URLLC</b> (niezawodna, niska latencja — np. pojazdy autonomiczne), <b>mMTC</b> (masowe IoT).</p>`},
+
+{p:3,cat:"Sieciowe technologie mobilne (Kulawiak)",q:"Na czym polega komórkowa budowa sieci (komórki, handover, reuse)?",a:`<p>Obszar dzieli się na <b>komórki</b>, każda obsługiwana przez stację bazową (BTS/NodeB/eNodeB/gNodeB). Idea:</p>
+<ul>
+<li><b>Ponowne użycie częstotliwości (frequency reuse)</b> — te same pasma w odległych komórkach → większa pojemność sieci.</li>
+<li><b>Handover (handoff)</b> — przekazanie połączenia między komórkami, gdy użytkownik się przemieszcza, bez przerwania.</li>
+<li>Mniejsze komórki = większa pojemność, ale więcej stacji (w 5G dochodzą <b>small cells</b> i fale milimetrowe o krótkim zasięgu).</li>
+</ul>`},
+
+{p:3,cat:"Sieciowe technologie mobilne (Kulawiak)",q:"Standardy Wi-Fi (802.11) — co warto wiedzieć?",a:`<p>Wi-Fi to rodzina standardów IEEE <b>802.11</b> (WLAN), pasma 2,4 GHz i 5 GHz (oraz 6 GHz w Wi-Fi 6E).</p>
+<table><tr><th>Standard</th><th>Nazwa</th><th>Pasmo</th></tr>
+<tr><td>802.11n</td><td>Wi-Fi 4</td><td>2,4/5 GHz</td></tr>
+<tr><td>802.11ac</td><td>Wi-Fi 5</td><td>5 GHz</td></tr>
+<tr><td>802.11ax</td><td>Wi-Fi 6/6E</td><td>2,4/5/6 GHz</td></tr></table>
+<ul>
+<li><b>2,4 GHz</b> — większy zasięg, mniejsza przepływność, więcej zakłóceń; <b>5 GHz</b> — odwrotnie.</li>
+<li>Dostęp do medium: <b>CSMA/CA</b> (unikanie kolizji). Zabezpieczenia: WPA2/WPA3.</li>
+</ul>`},
+
+{p:3,cat:"Sieciowe technologie mobilne (Kulawiak)",q:"Bluetooth i BLE — zastosowania i różnice.",a:`<p><b>Bluetooth</b> — bezprzewodowa komunikacja krótkiego zasięgu (~10 m, 2,4 GHz), topologia piconet (master–slave).</p>
+<ul>
+<li><b>Bluetooth Classic</b> — strumieniowanie (audio), wyższa przepływność, większy pobór energii.</li>
+<li><b>BLE (Bluetooth Low Energy)</b> — minimalny pobór energii, krótkie transmisje; idealne do IoT, opasek, beaconów, czujników.</li>
+</ul>
+<p>Parowanie urządzeń, profile (np. A2DP dla audio). Beacony BLE wykorzystuje się też do mikrolokalizacji wewnątrz budynków.</p>`},
+
+{p:3,cat:"Sieciowe technologie mobilne (Kulawiak)",q:"Czym jest NFC i czym różni się od RFID i Bluetooth?",a:`<p><b>NFC (Near Field Communication)</b> — komunikacja <b>bardzo krótkiego zasięgu (~4 cm)</b>, 13,56 MHz, oparta na RFID. Szybkie nawiązanie (bez parowania), małe prędkości.</p>
+<ul>
+<li><b>Zastosowania:</b> płatności zbliżeniowe, bilety, kontrola dostępu, parowanie urządzeń, tagi.</li>
+<li><b>vs RFID</b> — NFC to podzbiór HF RFID, ale dwukierunkowy (urządzenie może być czytnikiem i tagiem); klasyczny RFID bywa jednokierunkowy i ma większy zasięg.</li>
+<li><b>vs Bluetooth</b> — NFC ma dużo krótszy zasięg i wolniejszy transfer, ale natychmiastowe połączenie i wyższe bezpieczeństwo „z bliska” (często używane do zainicjowania połączenia BT).</li>
+</ul>`},
+
+{p:3,cat:"Sieciowe technologie mobilne (Kulawiak)",q:"Porównaj technologie łączności bezprzewodowej wg zasięgu i przepływności.",a:`<table><tr><th>Technologia</th><th>Zasięg</th><th>Przepływność</th><th>Typowe użycie</th></tr>
+<tr><td>NFC</td><td>~4 cm</td><td>bardzo mała</td><td>płatności, tagi</td></tr>
+<tr><td>Bluetooth/BLE</td><td>~10 m</td><td>mała–średnia</td><td>audio, IoT, peryferia</td></tr>
+<tr><td>Wi-Fi</td><td>~50–100 m</td><td>wysoka</td><td>LAN, internet</td></tr>
+<tr><td>Komórkowe (4G/5G)</td><td>km</td><td>wysoka (5G b. wysoka)</td><td>internet mobilny, IoT</td></tr></table>
+<p>Dodatkowo dla IoT dalekiego zasięgu i niskiej mocy: <b>LPWAN</b> (LoRa, NB-IoT, Sigfox) — duży zasięg, małe dane.</p>`},
+
+{p:3,cat:"Sieciowe technologie mobilne (Kulawiak)",q:"Jakie metody lokalizacji wykorzystują urządzenia mobilne?",a:`<ul>
+<li><b>GNSS/GPS</b> — pozycjonowanie satelitarne (na zewnątrz, dokładność metrowa).</li>
+<li><b>Lokalizacja komórkowa (Cell-ID, triangulacja)</b> — na podstawie stacji bazowych; mniej dokładna, działa wszędzie w zasięgu.</li>
+<li><b>Wi-Fi positioning</b> — na podstawie znanych punktów dostępowych (dobre w budynkach).</li>
+<li><b>Beacony BLE</b> — mikrolokalizacja wewnątrz pomieszczeń.</li>
+</ul>
+<p>To wiąże się z moją specjalnością <b>Systemy i technologie mobilne</b> oraz z geoinformatyką (Katedra Systemów Geoinformatycznych, w której pracuje dr Kulawiak).</p>`},
+
+{p:3,cat:"Sieciowe technologie mobilne (Kulawiak)",q:"Dlaczego 5G umożliwia masowy IoT i niskie opóźnienia?",a:`<ul>
+<li><b>Szerokie pasma</b> (w tym fale milimetrowe) + zaawansowane techniki anten (<b>MIMO/beamforming</b>) → ogromna przepustowość.</li>
+<li><b>Niskie opóźnienia (URLLC)</b> — krótszy czas reakcji, kluczowy dla sterowania w czasie rzeczywistym (pojazdy, automatyka).</li>
+<li><b>Network slicing</b> — wirtualne „plastry” sieci dostosowane do różnych usług na wspólnej infrastrukturze.</li>
+<li><b>mMTC</b> — obsługa ogromnej liczby urządzeń IoT na km² przy oszczędności energii.</li>
+</ul>`},
+{p:3,cat:"Zarządzanie projektem IT (Miler)",q:"Co to jest projekt i czym jest „trójkąt ograniczeń”?",a:`<p><b>Projekt</b> — tymczasowe przedsięwzięcie podejmowane w celu wytworzenia unikalnego produktu/usługi/rezultatu (ma początek i koniec, cel, budżet, zasoby).</p>
+<h4>Trójkąt ograniczeń (triple constraint)</h4>
+<p><b>Zakres – Czas – Koszt</b>, a w środku <b>Jakość</b>. Zmiana jednego wierzchołka wpływa na pozostałe (np. skrócenie czasu → wzrost kosztu lub cięcie zakresu). Zadaniem kierownika projektu jest balansowanie tych ograniczeń.</p>`},
+
+{p:3,cat:"Zarządzanie projektem IT (Miler)",q:"Jakie są fazy cyklu życia projektu informatycznego?",a:`<p>Klasycznie (wg PMI/PMBOK) grupy procesów:</p>
+<ol>
+<li><b>Inicjacja</b> — karta projektu, cele, interesariusze.</li>
+<li><b>Planowanie</b> — zakres, harmonogram, budżet, ryzyka, jakość.</li>
+<li><b>Realizacja</b> — wytwarzanie produktu, zarządzanie zespołem.</li>
+<li><b>Monitorowanie i kontrola</b> — śledzenie postępu, zmian, ryzyk.</li>
+<li><b>Zamknięcie</b> — odbiór, wnioski (lessons learned).</li>
+</ol>
+<p>W podejściu zwinnym te fazy są iterowane w każdym sprincie, a nie wykonywane raz sekwencyjnie.</p>`},
+
+{p:3,cat:"Zarządzanie projektem IT (Miler)",q:"Na czym polega zarządzanie ryzykiem w projekcie IT?",a:`<p><b>Ryzyko</b> — niepewne zdarzenie, które może wpłynąć (negatywnie lub pozytywnie) na cele projektu. Proces:</p>
+<ol>
+<li><b>Identyfikacja</b> ryzyk (rejestr ryzyk).</li>
+<li><b>Analiza</b> — jakościowa (prawdopodobieństwo × wpływ) i ilościowa.</li>
+<li><b>Planowanie reakcji</b> — unikanie, ograniczanie, przeniesienie (np. ubezpieczenie/outsourcing), akceptacja.</li>
+<li><b>Monitorowanie</b> i aktualizacja.</li>
+</ol>
+<p>Typowe ryzyka IT: zmienne wymagania, niedoszacowanie, rotacja zespołu, dług techniczny, integracje. Macierz prawdopodobieństwo×wpływ porządkuje priorytety.</p>`},
+
+{p:3,cat:"Zarządzanie projektem IT (Miler)",q:"Metody szacowania pracochłonności (estymacji) w projektach IT.",a:`<ul>
+<li><b>Ekspercka</b> — ocena doświadczonych osób.</li>
+<li><b>Analogiczna</b> — przez porównanie do podobnych, zakończonych projektów.</li>
+<li><b>Punkty funkcyjne (Function Points)</b> — na podstawie funkcjonalności (wejścia/wyjścia/zapytania).</li>
+<li><b>Story points + Planning Poker</b> (zwinne) — względna złożoność zadań, ciąg Fibonacciego, konsensus zespołu.</li>
+<li><b>PERT</b> — estymacja trójpunktowa: (optymistyczna + 4×prawdopodobna + pesymistyczna)/6.</li>
+</ul>
+<p>Niedoszacowanie to jedna z głównych przyczyn przekroczeń budżetu i terminów.</p>`},
+
+{p:3,cat:"Zarządzanie projektem IT (Miler)",q:"Co to WBS i metoda ścieżki krytycznej (CPM)?",a:`<ul>
+<li><b>WBS (Work Breakdown Structure)</b> — hierarchiczny podział zakresu na mniejsze, zarządzalne pakiety pracy.</li>
+<li><b>Ścieżka krytyczna (CPM)</b> — najdłuższa sekwencja zależnych zadań wyznaczająca minimalny czas projektu. Zadania na niej mają <b>zerowy zapas (slack)</b> — ich opóźnienie opóźnia cały projekt.</li>
+</ul>
+<p>Narzędzia: wykres Gantta (harmonogram), diagram sieciowy (zależności).</p>`},
+
+{p:3,cat:"Zarządzanie projektem IT (Miler)",q:"Dlaczego projekty informatyczne często zawodzą? (raport CHAOS)",a:`<p>Badania Standish Group (CHAOS) od lat pokazują wysoki odsetek projektów IT opóźnionych, przekraczających budżet lub anulowanych.</p>
+<h4>Najczęstsze przyczyny</h4>
+<ul>
+<li>Niejasne / zmienne wymagania i brak zaangażowania użytkownika.</li>
+<li>Słabe planowanie i nierealistyczne estymacje.</li>
+<li>Brak wsparcia kierownictwa, zła komunikacja.</li>
+<li>Pomijanie ryzyk, „scope creep” (rozpełzanie zakresu).</li>
+</ul>
+<p>Podejścia zwinne powstały m.in. po to, by ograniczyć te problemy przez krótkie iteracje i ciągłą informację zwrotną.</p>`},
+
+{p:3,cat:"Zarządzanie projektem IT (Miler)",q:"Czym jest „czynnik ludzki” w projekcie informatycznym?",a:`<p>To pozatechniczne aspekty decydujące o sukcesie: <b>komunikacja, motywacja, praca zespołowa, zarządzanie konfliktem, przywództwo</b>.</p>
+<p>Miler akcentuje psychologię w projektach IT (przedmiot „Społeczne aspekty informatyki” obejmuje „czynnik ludzki”). Nawet doskonały technicznie zespół zawiedzie przy złej komunikacji, wypaleniu czy konfliktach. Modele zespołu (np. fazy Tuckmana: forming–storming–norming–performing) pomagają to rozumieć.</p>`},
+
+{p:3,cat:"Zarządzanie projektem IT (Miler)",q:"Predyktywne (plan-driven) vs adaptacyjne (zwinne) zarządzanie projektem.",a:`<ul>
+<li><b>Predyktywne</b> — pełne planowanie z góry, sztywny zakres; dobre przy stabilnych wymaganiach i wymaganiach regulacyjnych.</li>
+<li><b>Adaptacyjne (Agile)</b> — iteracje, elastyczny zakres, ciągła informacja zwrotna; dobre przy niepewności.</li>
+<li><b>Hybrydowe</b> — łączą oba (np. planowanie kamieni milowych + zwinna realizacja).</li>
+</ul>
+<p>Łącznik z moją pracą: automatyzacja testów (i CI/CD) jest warunkiem skutecznego podejścia zwinnego — umożliwia szybkie, powtarzalne sprawdzanie jakości w każdej iteracji.</p>`},
+{p:3,cat:"Społeczne aspekty informatyki (Miler)",q:"Jakie trzy grupy tematyczne obejmuje przedmiot „Społeczne aspekty informatyki”?",a:`<p>Wg programu PG (Katedra Inżynierii Oprogramowania):</p>
+<ol>
+<li><b>Etyczne aspekty informatyki</b> — odpowiedzialność zawodowa, szanse i zagrożenia technologii informacyjnych.</li>
+<li><b>Psychologia dla informatyka</b> — komunikacja, praca zespołowa, czynnik ludzki.</li>
+<li><b>Aspekty prawne</b> — własność intelektualna, licencje, umowy IT.</li>
+</ol>
+<p>Cel: podniesienie świadomości społecznych i etycznych skutków rozwoju IT oraz umiejętność radzenia sobie ze zjawiskami psychologicznymi w projektach.</p>`},
+
+{p:3,cat:"Społeczne aspekty informatyki (Miler)",q:"Czym jest kodeks etyki ACM/IEEE i jakie ma kluczowe zasady?",a:`<p><b>ACM/IEEE Code of Ethics and Professional Conduct</b> — zbiór zasad postępowania dla informatyków.</p>
+<h4>Przykładowe zasady</h4>
+<ul>
+<li>Działać dla <b>dobra publicznego</b> (public interest) jako nadrzędnego celu.</li>
+<li>Unikać szkód, być uczciwym i godnym zaufania.</li>
+<li>Szanować <b>prywatność</b> i poufność.</li>
+<li>Tworzyć oprogramowanie wysokiej jakości i utrzymywać kompetencje.</li>
+<li>Unikać konfliktów interesów.</li>
+</ul>
+<p>Kodeks daje ramy do <b>analizy etycznej</b> trudnych decyzji zawodowych (np. czy wdrożyć funkcję naruszającą prywatność).</p>`},
+
+{p:3,cat:"Społeczne aspekty informatyki (Miler)",q:"Jak technologie informacyjne wpływają na społeczeństwo — szanse i zagrożenia?",a:`<ul>
+<li><b>Szanse:</b> dostęp do wiedzy, automatyzacja pracy, e-usługi, łączność, nowe modele biznesu, wsparcie medycyny/nauki.</li>
+<li><b>Zagrożenia:</b> wykluczenie cyfrowe, dezinformacja, uzależnienia, inwigilacja, utrata prywatności, automatyzacja miejsc pracy, bańki informacyjne, cyberprzemoc.</li>
+</ul>
+<p>Kluczowa jest <b>odpowiedzialność zawodowa</b> — informatyk współkształtuje skutki społeczne swoich produktów, więc powinien przewidywać ich nadużycia i skutki uboczne.</p>`},
+
+{p:3,cat:"Społeczne aspekty informatyki (Miler)",q:"Własność intelektualna w IT: prawo autorskie, patenty, znaki towarowe.",a:`<ul>
+<li><b>Prawo autorskie</b> — chroni <b>wyrażenie</b> (kod źródłowy, dokumentację, grafikę), nie ideę. Powstaje automatycznie.</li>
+<li><b>Patent</b> — chroni wynalazek/rozwiązanie techniczne (w Europie patentowanie „czystego” oprogramowania jest ograniczone).</li>
+<li><b>Znak towarowy</b> — chroni oznaczenia handlowe (nazwa, logo).</li>
+<li><b>Tajemnica przedsiębiorstwa</b> — poufne know-how.</li>
+</ul>
+<p>W pracy złożyłem oświadczenie o samodzielności i o korzystaniu z GenAI „o niskim stopniu ingerencji” — to praktyczny przykład poszanowania prawa autorskiego i uczciwości akademickiej.</p>`},
+
+{p:3,cat:"Społeczne aspekty informatyki (Miler)",q:"Rodzaje licencji oprogramowania — open source vs zamknięte.",a:`<ul>
+<li><b>Permisywne (permissive)</b> — MIT, Apache 2.0, BSD: pozwalają na niemal dowolne użycie, także komercyjne i zamknięte, przy zachowaniu informacji o autorach.</li>
+<li><b>Copyleft</b> — GPL: dzieła pochodne muszą być udostępniane na tej samej licencji (wymóg otwartości). LGPL — łagodniejszy wariant dla bibliotek.</li>
+<li><b>Zamknięte (proprietary)</b> — kod niedostępny, użycie wg EULA.</li>
+</ul>
+<p>Związek z pracą: narzędzia Selenium, Cypress, Playwright, TestCafe są <b>open source</b> (m.in. licencje Apache 2.0/MIT) — co obniża koszt wejścia, ważny czynnik w wyborze narzędzia.</p>`},
+
+{p:3,cat:"Społeczne aspekty informatyki (Miler)",q:"RODO/GDPR — podstawowe zasady ochrony danych osobowych.",a:`<p><b>RODO (GDPR)</b> — unijne rozporządzenie o ochronie danych osobowych. Kluczowe zasady:</p>
+<ul>
+<li><b>Zgodność z prawem, rzetelność, przejrzystość.</b></li>
+<li><b>Ograniczenie celu</b> i <b>minimalizacja danych</b> (zbieraj tylko niezbędne).</li>
+<li><b>Prawidłowość</b>, ograniczenie przechowywania.</li>
+<li><b>Integralność i poufność</b> (bezpieczeństwo).</li>
+<li>Prawa osób: dostęp, sprostowanie, <b>usunięcie („prawo do bycia zapomnianym”)</b>, przenoszenie.</li>
+</ul>
+<p>Privacy by design/by default — ochronę danych projektuje się od początku systemu. Naruszenia zagrożone wysokimi karami (do 4% obrotu).</p>`},
+
+{p:3,cat:"Społeczne aspekty informatyki (Miler)",q:"Etyka sztucznej inteligencji — jakie są główne wyzwania?",a:`<ul>
+<li><b>Stronniczość (bias)</b> — modele uczone na obciążonych danych powielają dyskryminację.</li>
+<li><b>Przejrzystość i wyjaśnialność</b> — „czarna skrzynka” utrudnia rozliczalność decyzji.</li>
+<li><b>Odpowiedzialność</b> — kto odpowiada za błąd AI (twórca, operator, użytkownik)?</li>
+<li><b>Prywatność</b> — trenowanie na danych osobowych, profilowanie.</li>
+<li><b>Wpływ na pracę</b> i dezinformacja (deepfake, generowane treści).</li>
+</ul>
+<p>UE wprowadza <b>AI Act</b> (podejście oparte na ryzyku). To także odpowiedź na uwagę recenzenta o roli AI — etyka AI to naturalne rozszerzenie tematu społecznych aspektów informatyki.</p>`},
+
+{p:3,cat:"Społeczne aspekty informatyki (Miler)",q:"Psychologia dla informatyka: komunikacja i praca zespołowa.",a:`<ul>
+<li><b>Komunikacja</b> — nadawca/odbiorca/szum; znaczenie aktywnego słuchania, informacji zwrotnej i komunikacji niewerbalnej; różnica między komunikacją synchroniczną a asynchroniczną (ważne w zespołach rozproszonych).</li>
+<li><b>Praca zespołowa</b> — role w zespole, fazy rozwoju (Tuckman: forming, storming, norming, performing), zarządzanie konfliktem.</li>
+<li><b>Prezentacja</b> — dostosowanie przekazu do odbiorcy, struktura, wizualizacja danych.</li>
+</ul>
+<div class="tip"><b>Meta-wskazówka na obronę:</b> sama obrona to akt komunikacji i prezentacji — jasna struktura wypowiedzi, kontakt wzrokowy, spokój i konkretne odpowiedzi to zastosowanie tej wiedzy w praktyce.</div>`},
+
+{p:3,cat:"Społeczne aspekty informatyki (Miler)",q:"Zjawiska społeczne w Internecie — jakie warto znać?",a:`<ul>
+<li><b>Bańka informacyjna / komora echa</b> — algorytmy pokazują treści zgodne z poglądami, ograniczając różnorodność.</li>
+<li><b>Dezinformacja i fake news</b> — szybkie rozprzestrzenianie nieprawdziwych treści.</li>
+<li><b>Hejt i cyberprzemoc</b>, efekt anonimowości i odhamowania online.</li>
+<li><b>Wykluczenie cyfrowe (digital divide)</b> — nierówny dostęp do technologii.</li>
+<li><b>Ekonomia uwagi</b> — projektowanie pod zaangażowanie (uzależniające mechanizmy).</li>
+</ul>
+<p>Informatyk projektujący systemy współodpowiada za te zjawiska (np. projektowanie etyczne, moderacja, transparentność algorytmów).</p>`},
+/*DATA_END*/
+];
+
+/* ====================== SILNIK ====================== */
+const LS='magisterka_v1';
+let store={known:{},fav:{}};
+try{store=Object.assign(store,JSON.parse(localStorage.getItem(LS)||'{}'))}catch(e){}
+function save(){try{localStorage.setItem(LS,JSON.stringify(store))}catch(e){}}
+
+const state={mode:'browse',prio:'1',cat:'all',q:'',favOnly:false,unknownOnly:false,idx:0,quizOrder:[]};
+const $=s=>document.querySelector(s);
+const norm=s=>(s||'').toLowerCase().replace(/[ąàá]/g,'a').replace(/ć/g,'c').replace(/ę/g,'e').replace(/ł/g,'l').replace(/ń/g,'n').replace(/[óò]/g,'o').replace(/ś/g,'s').replace(/[żź]/g,'z');
+
+function filtered(){
+  return DATA.filter(d=>{
+    if(state.prio!=='all' && String(d.p)!==state.prio) return false;
+    if(state.cat!=='all' && d.cat!==state.cat) return false;
+    if(state.favOnly && !store.fav[d.id]) return false;
+    if(state.unknownOnly && store.known[d.id]) return false;
+    if(state.q){const t=norm(d.q+' '+d.a+' '+d.cat);if(!norm(state.q).split(/\s+/).every(w=>t.includes(w)))return false;}
+    return true;
+  });
+}
+function pLabel(p){return p===1?'Praca i obrona':p===2?'Kierunkowe':'Komisja';}
+
+/* ---- statystyki + kategorie ---- */
+function refreshStats(){
+  $('#stTotal').textContent=DATA.length;
+  $('#stKnown').textContent=Object.values(store.known).filter(Boolean).length;
+  $('#stFav').textContent=Object.values(store.fav).filter(Boolean).length;
+  $('#stP1').textContent=DATA.filter(d=>d.p===1).length;
+}
+function buildCatOptions(){
+  const sel=$('#cat');const cur=state.cat;
+  const cats=[...new Set(DATA.filter(d=>state.prio==='all'||String(d.p)===state.prio).map(d=>d.cat))];
+  sel.innerHTML='<option value="all">Wszystkie kategorie ('+(DATA.filter(d=>state.prio==='all'||String(d.p)===state.prio).length)+')</option>'+
+    cats.map(c=>'<option value="'+c.replace(/"/g,'&quot;')+'">'+c+' ('+DATA.filter(d=>d.cat===c).length+')</option>').join('');
+  sel.value=[...sel.options].some(o=>o.value===cur)?cur:'all';
+  state.cat=sel.value;
+}
+
+/* ---- BROWSE ---- */
+function cardHTML(d){
+  const fav=store.fav[d.id]?'on-fav':'',kn=store.known[d.id]?'on-known':'';
+  return '<div class="card p'+d.p+' '+(store.known[d.id]?'known':'')+'" data-id="'+d.id+'">'+
+    '<div class="qrow"><span class="badge p'+d.p+'">P'+d.p+'</span>'+
+    '<div class="qtext">'+d.q+'<span class="qmeta">'+d.cat+'</span></div>'+
+    '<div class="qbtns">'+
+      '<button class="mini fav '+fav+'" title="Ulubione">★</button>'+
+      '<button class="mini known '+kn+'" title="Umiem">✓</button>'+
+    '</div></div>'+
+    '<div class="answer"><div class="answer-inner">'+d.a+'</div></div></div>';
+}
+function renderBrowse(){
+  const list=filtered();const root=$('#browseView');
+  if(!list.length){root.innerHTML='<div class="empty">Brak pytań dla wybranych filtrów. Zmień priorytet, kategorię lub wyczyść wyszukiwanie.</div>';return;}
+  const groups={};list.forEach(d=>{(groups[d.cat]=groups[d.cat]||[]).push(d)});
+  let html='';
+  for(const cat in groups){
+    html+='<div class="catblock"><div class="cathead">'+cat+'<span class="cnt">'+groups[cat].length+'</span></div>'+
+      groups[cat].map(cardHTML).join('')+'</div>';
+  }
+  root.innerHTML=html;
+}
+
+/* ---- FISZKI ---- */
+function renderCards(){
+  const list=filtered();const root=$('#cardsView');
+  if(!list.length){root.innerHTML='<div class="empty">Brak pytań do nauki. Zmień filtry.</div>';return;}
+  if(state.idx>=list.length)state.idx=0;
+  const d=list[state.idx];
+  root.innerHTML=
+    '<div class="qzmeta"><span>Karta '+(state.idx+1)+' / '+list.length+'</span><span>'+pLabel(d.p)+' · '+(store.known[d.id]?'✓ opanowane':'do powtórki')+'</span></div>'+
+    '<div class="progress"><i style="width:'+((state.idx+1)/list.length*100)+'%"></i></div>'+
+    '<div class="stage"><div class="fcard" id="fc">'+
+      '<span class="badge p'+d.p+'">P'+d.p+' · '+d.cat+'</span>'+
+      '<div class="fq">'+d.q+'</div>'+
+      '<div class="fa"><div class="answer-inner">'+d.a+'</div></div>'+
+      '<div class="fhint" id="fhint">Kliknij kartę lub naciśnij Spację, aby odsłonić odpowiedź</div>'+
+    '</div></div>'+
+    '<div class="controls">'+
+      '<button class="btn ghost" id="prev">← Poprzednie</button>'+
+      '<button class="btn primary" id="reveal">Odsłoń odpowiedź</button>'+
+      '<button class="btn again" id="again">↻ Powtórz</button>'+
+      '<button class="btn good" id="good">✓ Umiem</button>'+
+      '<button class="btn ghost" id="next">Następne →</button>'+
+    '</div>';
+  $('#fc').onclick=reveal;
+  $('#reveal').onclick=reveal;
+  $('#prev').onclick=()=>{state.idx=(state.idx-1+list.length)%list.length;renderCards();};
+  $('#next').onclick=()=>{state.idx=(state.idx+1)%list.length;renderCards();};
+  $('#good').onclick=()=>{store.known[d.id]=true;save();refreshStats();state.idx=(state.idx+1)%list.length;renderCards();};
+  $('#again').onclick=()=>{store.known[d.id]=false;save();refreshStats();state.idx=(state.idx+1)%list.length;renderCards();};
+}
+function reveal(){const fc=$('#fc');if(fc){fc.classList.add('revealed');const h=$('#fhint');if(h)h.style.display='none';}}
+
+/* ---- QUIZ ---- */
+function renderQuiz(){
+  const list=filtered();const root=$('#quizView');
+  if(!list.length){root.innerHTML='<div class="empty">Brak pytań do quizu. Zmień filtry.</div>';return;}
+  if(!state.quizOrder.length||state.quizOrder.some(id=>!list.find(d=>d.id===id))){
+    state.quizOrder=list.map(d=>d.id).sort(()=>Math.random()-0.5);state.idx=0;
+  }
+  if(state.idx>=state.quizOrder.length){
+    const known=state.quizOrder.filter(id=>store.known[id]).length;
+    root.innerHTML='<div class="empty"><h2>🎉 Koniec rundy!</h2><p>Oznaczono jako opanowane: <b>'+known+'</b> z '+state.quizOrder.length+'.</p><button class="btn primary" id="restart">Losuj nową rundę</button></div>';
+    $('#restart').onclick=()=>{state.quizOrder=[];renderQuiz();};return;
+  }
+  const d=DATA.find(x=>x.id===state.quizOrder[state.idx]);
+  const doneKnown=state.quizOrder.slice(0,state.idx).filter(id=>store.known[id]).length;
+  root.innerHTML=
+    '<div class="qzmeta"><span>Pytanie '+(state.idx+1)+' / '+state.quizOrder.length+'</span><span>✓ '+doneKnown+' opanowanych w rundzie</span></div>'+
+    '<div class="progress"><i style="width:'+((state.idx)/state.quizOrder.length*100)+'%"></i></div>'+
+    '<div class="stage"><div class="fcard" id="fc">'+
+      '<span class="badge p'+d.p+'">P'+d.p+' · '+d.cat+'</span>'+
+      '<div class="fq">'+d.q+'</div>'+
+      '<div class="fa"><div class="answer-inner">'+d.a+'</div></div>'+
+      '<div class="fhint" id="fhint">Spróbuj odpowiedzieć w myślach, potem odsłoń i oceń się szczerze</div>'+
+    '</div></div>'+
+    '<div class="controls" id="qc1"><button class="btn primary" id="reveal">Pokaż odpowiedź</button></div>'+
+    '<div class="controls" id="qc2" style="display:none">'+
+      '<button class="btn again" id="again">✗ Nie wiedziałem</button>'+
+      '<button class="btn good" id="good">✓ Wiedziałem</button>'+
+    '</div>';
+  $('#fc').onclick=quizReveal;$('#reveal').onclick=quizReveal;
+  const adv=(known)=>{store.known[d.id]=known;save();refreshStats();state.idx++;renderQuiz();};
+  $('#good').onclick=()=>adv(true);$('#again').onclick=()=>adv(false);
+}
+function quizReveal(){const fc=$('#fc');if(fc&&!fc.classList.contains('revealed')){fc.classList.add('revealed');const h=$('#fhint');if(h)h.style.display='none';$('#qc1').style.display='none';$('#qc2').style.display='flex';}}
+
+/* ---- render dispatcher ---- */
+function render(){
+  $('#browseView').style.display=state.mode==='browse'?'block':'none';
+  $('#cardsView').style.display=state.mode==='cards'?'block':'none';
+  $('#quizView').style.display=state.mode==='quiz'?'block':'none';
+  if(state.mode==='browse')renderBrowse();
+  else if(state.mode==='cards')renderCards();
+  else renderQuiz();
+}
+
+/* ---- events ---- */
+$('#browseView').addEventListener('click',e=>{
+  const card=e.target.closest('.card');if(!card)return;const id=+card.dataset.id;
+  if(e.target.classList.contains('fav')){store.fav[id]=!store.fav[id];save();e.target.classList.toggle('on-fav');refreshStats();return;}
+  if(e.target.classList.contains('known')){store.known[id]=!store.known[id];save();e.target.classList.toggle('on-known');card.classList.toggle('known');refreshStats();return;}
+  card.classList.toggle('open');
+});
+document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+  state.mode=b.dataset.mode;state.idx=0;state.quizOrder=[];render();
+});
+$('#prioFilters').addEventListener('click',e=>{
+  const c=e.target.closest('.chip');if(!c)return;
+  if(c.dataset.toggle){
+    c.classList.toggle('active');
+    if(c.dataset.toggle==='fav')state.favOnly=c.classList.contains('active');
+    else state.unknownOnly=c.classList.contains('active');
+  }else{
+    document.querySelectorAll('.chip[data-p]').forEach(x=>x.classList.remove('active'));c.classList.add('active');
+    state.prio=c.dataset.p;buildCatOptions();
+  }
+  state.idx=0;state.quizOrder=[];render();
+});
+$('#cat').onchange=e=>{state.cat=e.target.value;state.idx=0;state.quizOrder=[];render();};
+$('#search').oninput=e=>{state.q=e.target.value;state.idx=0;state.quizOrder=[];render();};
+$('#themeBtn').onclick=()=>{const d=document.documentElement;const t=d.getAttribute('data-theme')==='dark'?'':'dark';d.setAttribute('data-theme',t);try{localStorage.setItem('mag_theme',t)}catch(e){}};
+$('#resetBtn').onclick=()=>{if(confirm('Wyczyścić cały postęp (opanowane i ulubione)?')){store={known:{},fav:{}};save();refreshStats();render();}};
+document.addEventListener('keydown',e=>{
+  if(state.mode==='browse'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.code==='Space'){e.preventDefault();state.mode==='cards'?reveal():quizReveal();}
+  if(e.code==='ArrowRight'&&state.mode==='cards'){const l=filtered();state.idx=(state.idx+1)%l.length;renderCards();}
+  if(e.code==='ArrowLeft'&&state.mode==='cards'){const l=filtered();state.idx=(state.idx-1+l.length)%l.length;renderCards();}
+});
+
+/* ---- init ---- */
+(function init(){
+  try{const t=localStorage.getItem('mag_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}
+  DATA.forEach((d,i)=>{if(d.id==null)d.id=i+1;});
+  refreshStats();buildCatOptions();render();
+})();
+</script>
+</body>
+</html>
