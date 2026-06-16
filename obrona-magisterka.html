@@ -1103,7 +1103,7 @@ function renderCards(){
   $('#good').onclick=()=>{store.known[d.id]=true;save();refreshStats();state.idx=(state.idx+1)%list.length;renderCards();};
   $('#again').onclick=()=>{store.known[d.id]=false;save();refreshStats();state.idx=(state.idx+1)%list.length;renderCards();};
 }
-function reveal(){const fc=$('#fc');if(fc){fc.classList.add('revealed');const h=$('#fhint');if(h)h.style.display='none';}}
+function reveal(){const fc=$('#fc');if(!fc)return;fc.classList.add('revealed');const fa=fc.querySelector('.fa');if(fa)fa.style.display='block';const h=$('#fhint');if(h)h.style.display='none';}
 
 /* ---- QUIZ ---- */
 function renderQuiz(){
@@ -1137,7 +1137,7 @@ function renderQuiz(){
   const adv=(known)=>{store.known[d.id]=known;save();refreshStats();state.idx++;renderQuiz();};
   $('#good').onclick=()=>adv(true);$('#again').onclick=()=>adv(false);
 }
-function quizReveal(){const fc=$('#fc');if(fc&&!fc.classList.contains('revealed')){fc.classList.add('revealed');const h=$('#fhint');if(h)h.style.display='none';$('#qc1').style.display='none';$('#qc2').style.display='flex';}}
+function quizReveal(){const fc=$('#fc');if(!fc||fc.classList.contains('revealed'))return;fc.classList.add('revealed');const fa=fc.querySelector('.fa');if(fa)fa.style.display='block';const h=$('#fhint');if(h)h.style.display='none';const a=$('#qc1');if(a)a.style.display='none';const b=$('#qc2');if(b)b.style.display='flex';}
 
 /* ---- render dispatcher ---- */
 function render(){
