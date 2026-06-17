@@ -2,7 +2,12 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Obrona">
+<meta name="theme-color" content="#0f766e">
 <title>Baza wiedzy — Obrona pracy magisterskiej | Oskar Wołcz</title>
 <style>
 :root{
@@ -20,7 +25,7 @@ html{scroll-behavior:smooth}
 body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
 a{color:var(--p2)}
 .wrap{max-width:1080px;margin:0 auto;padding:0 18px}
-header.top{background:linear-gradient(135deg,#0f766e 0%,#155e9c 60%,#3b2f8f 100%);color:#fff;padding:30px 0 26px}
+header.top{background:linear-gradient(135deg,#0f766e 0%,#155e9c 60%,#3b2f8f 100%);color:#fff;padding:calc(30px + env(safe-area-inset-top,0px)) 0 26px}
 header.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
 header.top h1{margin:0;font-size:1.5rem;letter-spacing:.2px}
 header.top p{margin:6px 0 0;opacity:.92;font-size:.95rem;max-width:640px}
@@ -31,7 +36,8 @@ header.top p{margin:6px 0 0;opacity:.92;font-size:.95rem;max-width:640px}
 .stat{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:8px 14px;font-size:.82rem}
 .stat b{font-size:1.15rem;display:block;line-height:1.1}
 /* toolbar */
-.toolbar{position:sticky;top:0;z-index:40;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+.toolbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow);transition:transform .25s ease;will-change:transform}
+.toolbar.hide{transform:translateY(-105%)}
 .toolbar .wrap{padding:12px 18px}
 .modes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .mode{flex:0 0 auto;border:1px solid var(--line);background:transparent;color:var(--muted);padding:8px 16px;border-radius:999px;cursor:pointer;font-weight:600;font-size:.9rem}
@@ -1284,6 +1290,20 @@ document.addEventListener('keydown',e=>{
   if(e.code==='ArrowRight'&&state.mode==='cards'){const l=filtered();state.idx=(state.idx+1)%l.length;renderCards();}
   if(e.code==='ArrowLeft'&&state.mode==='cards'){const l=filtered();state.idx=(state.idx-1+l.length)%l.length;renderCards();}
 });
+
+/* ---- auto-ukrywanie paska na telefonie przy przewijaniu ---- */
+(function autoHideBar(){
+  const bar=document.querySelector('.toolbar'); if(!bar)return;
+  let lastY=window.scrollY||window.pageYOffset||0, ticking=false;
+  function upd(){
+    const y=window.scrollY||window.pageYOffset||0;
+    if(window.innerWidth>768){ bar.classList.remove('hide'); lastY=y; ticking=false; return; }
+    if(y>lastY+4 && y>150){ bar.classList.add('hide'); }
+    else if(y<lastY-4){ bar.classList.remove('hide'); }
+    lastY=y; ticking=false;
+  }
+  window.addEventListener('scroll',()=>{ if(!ticking){ticking=true;requestAnimationFrame(upd);} },{passive:true});
+})();
 
 /* ---- init ---- */
 (function init(){
