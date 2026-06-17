@@ -99,6 +99,11 @@ main{padding:22px 0 70px}
 .progress>i{display:block;height:100%;background:var(--accent);width:0}
 .qzmeta{max-width:760px;margin:6px auto 0;display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted)}
 .empty{text-align:center;color:var(--muted);padding:50px 10px}
+.audiobar{max-width:760px;margin:0 auto 6px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:.85rem}
+.audiobar label{display:flex;align-items:center;gap:6px}
+.audiobar select,.audiobar input[type=range]{accent-color:var(--accent)}
+.mini.speak.playing{color:var(--accent);border-color:var(--accent)}
+.nowread{outline:2px solid var(--accent);outline-offset:2px}
 .footer{color:var(--muted);font-size:.8rem;text-align:center;padding:24px 10px}
 .kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-size:.78rem;background:var(--panel)}
 @media(max-width:560px){header.top h1{font-size:1.25rem}.qbtns{flex-direction:column}}
@@ -132,6 +137,7 @@ main{padding:22px 0 70px}
       <button class="mode active" data-mode="browse">📚 Przeglądaj</button>
       <button class="mode" data-mode="cards">🃏 Fiszki</button>
       <button class="mode" data-mode="quiz">🎯 Quiz</button>
+      <button class="mode" data-mode="audio">🎧 Audio</button>
     </div>
     <div class="searchrow">
       <input id="search" placeholder="🔍 Szukaj w pytaniach i odpowiedziach… (np. Playwright, hipoteza, fotogrametria, Scrum)">
@@ -154,6 +160,7 @@ main{padding:22px 0 70px}
     <div id="browseView"></div>
     <div id="cardsView" style="display:none"></div>
     <div id="quizView" style="display:none"></div>
+    <div id="audioView" style="display:none"></div>
   </div>
 </main>
 
@@ -1018,7 +1025,7 @@ let store={known:{},fav:{}};
 try{store=Object.assign(store,JSON.parse(localStorage.getItem(LS)||'{}'))}catch(e){}
 function save(){try{localStorage.setItem(LS,JSON.stringify(store))}catch(e){}}
 
-const state={mode:'browse',prio:'1',cat:'all',q:'',favOnly:false,unknownOnly:false,idx:0,quizOrder:[]};
+const state={mode:'browse',prio:'1',cat:'all',q:'',favOnly:false,unknownOnly:false,idx:0,quizOrder:[],audioIdx:0,audioPlaying:false,readAns:true,rate:1,voice:''};
 const $=s=>document.querySelector(s);
 const norm=s=>(s||'').toLowerCase().replace(/[ąàá]/g,'a').replace(/ć/g,'c').replace(/ę/g,'e').replace(/ł/g,'l').replace(/ń/g,'n').replace(/[óò]/g,'o').replace(/ś/g,'s').replace(/[żź]/g,'z');
 
@@ -1057,6 +1064,7 @@ function cardHTML(d){
     '<div class="qrow"><span class="badge p'+d.p+'">P'+d.p+'</span>'+
     '<div class="qtext">'+d.q+'<span class="qmeta">'+d.cat+'</span></div>'+
     '<div class="qbtns">'+
+      '<button class="mini speak" title="Czytaj na głos">🔊</button>'+
       '<button class="mini fav '+fav+'" title="Ulubione">★</button>'+
       '<button class="mini known '+kn+'" title="Umiem">✓</button>'+
     '</div></div>'+
@@ -1139,26 +1147,120 @@ function renderQuiz(){
 }
 function quizReveal(){const fc=$('#fc');if(!fc||fc.classList.contains('revealed'))return;fc.classList.add('revealed');const fa=fc.querySelector('.fa');if(fa)fa.style.display='block';const h=$('#fhint');if(h)h.style.display='none';const a=$('#qc1');if(a)a.style.display='none';const b=$('#qc2');if(b)b.style.display='flex';}
 
+/* ---- AUDIO / synteza mowy (Web Speech API) ---- */
+let ttsKeepAlive=null;
+function ttsSupported(){return typeof window!=='undefined' && 'speechSynthesis' in window;}
+function stripHTML(html){
+  let t=String(html);
+  t=t.replace(/<\/(h4|p|li|tr|div)>/gi,'. ').replace(/<br\s*\/?>(?!$)/gi,'. ').replace(/<li>/gi,' ');
+  t=t.replace(/<[^>]+>/g,' ');
+  try{const ta=document.createElement('textarea');ta.innerHTML=t;t=ta.value;}catch(e){}
+  t=t.replace(/\s+/g,' ').replace(/\s+([.,;:])/g,'$1').replace(/\.(\s*\.)+/g,'.').trim();
+  return t;
+}
+function chunkText(t){
+  const parts=t.match(/[^.!?]+[.!?]+|\S[^.!?]*$/g)||[t];
+  const out=[];let cur='';
+  parts.forEach(p=>{ if((cur+p).length>140){ if(cur.trim())out.push(cur.trim()); cur=p; } else cur+=p; });
+  if(cur.trim())out.push(cur.trim());
+  return out;
+}
+function stopSpeak(){ try{ if(ttsSupported())window.speechSynthesis.cancel(); }catch(e){} if(ttsKeepAlive){clearInterval(ttsKeepAlive);ttsKeepAlive=null;} }
+function pickVoice(){
+  if(!ttsSupported())return null;
+  const vs=window.speechSynthesis.getVoices()||[];
+  if(state.voice){const f=vs.find(v=>v.name===state.voice);if(f)return f;}
+  return vs.find(v=>/pl[-_]PL/i.test(v.lang))||vs.find(v=>/^pl/i.test(v.lang))||null;
+}
+function speakText(html,onDone){
+  if(!ttsSupported()){alert('Ta przeglądarka nie obsługuje czytania na głos. Otwórz plik w Chrome lub Microsoft Edge.');return;}
+  stopSpeak();
+  const ss=window.speechSynthesis;
+  const chunks=chunkText(stripHTML(html));
+  const voice=pickVoice();
+  const rate=state.rate||1; let i=0;
+  function next(){ if(i>=chunks.length){if(ttsKeepAlive){clearInterval(ttsKeepAlive);ttsKeepAlive=null;} if(onDone)onDone(); return;}
+    const u=new SpeechSynthesisUtterance(chunks[i++]); u.lang='pl-PL'; if(voice)u.voice=voice; u.rate=rate; u.pitch=1; u.onend=next; u.onerror=next; ss.speak(u); }
+  if(ttsKeepAlive)clearInterval(ttsKeepAlive);
+  ttsKeepAlive=setInterval(()=>{try{if(ss.speaking){ss.pause();ss.resume();}}catch(e){}},9000);
+  next();
+}
+function populateVoices(){
+  const sel=$('#voiceSel'); if(!sel||!ttsSupported())return;
+  const vs=window.speechSynthesis.getVoices()||[];
+  const pl=vs.filter(v=>/^pl/i.test(v.lang)), other=vs.filter(v=>!/^pl/i.test(v.lang));
+  const ordered=pl.concat(other);
+  sel.innerHTML = ordered.length ? ordered.map(v=>'<option value="'+v.name.replace(/"/g,'&quot;')+'">'+v.name+' ('+v.lang+')</option>').join('') : '<option value="">(brak głosów — zainstaluj polski głos w systemie)</option>';
+  if(state.voice && ordered.some(v=>v.name===state.voice)) sel.value=state.voice;
+  else if(pl[0]){ sel.value=pl[0].name; state.voice=pl[0].name; }
+  else if(ordered[0]){ state.voice=ordered[0].name; }
+}
+function audioPlay(){
+  const list=filtered(); if(!list.length){state.audioPlaying=false;return;}
+  if(state.audioIdx>=list.length)state.audioIdx=0;
+  const d=list[state.audioIdx];
+  const txt='Pytanie. '+stripHTML(d.q)+(state.readAns?('. Odpowiedź. '+stripHTML(d.a)):'.');
+  speakText(txt,()=>{ if(!state.audioPlaying)return;
+    if(state.audioIdx<list.length-1){state.audioIdx++;renderAudio();audioPlay();}
+    else{state.audioPlaying=false;renderAudio();} });
+}
+function renderAudio(){
+  const list=filtered();const root=$('#audioView');
+  if(!list.length){root.innerHTML='<div class="empty">Brak pytań dla wybranych filtrów.</div>';return;}
+  if(state.audioIdx>=list.length)state.audioIdx=0;
+  const d=list[state.audioIdx];
+  root.innerHTML=
+    '<div class="audiobar">'+
+      '<label>🎙️ Głos: <select id="voiceSel"></select></label>'+
+      '<label>Tempo: <input id="rate" type="range" min="0.6" max="1.4" step="0.1" value="'+(state.rate||1)+'"> <span id="rateVal">'+(state.rate||1)+'×</span></label>'+
+      '<label><input type="checkbox" id="readAns" '+(state.readAns?'checked':'')+'> czytaj odpowiedzi</label>'+
+    '</div>'+
+    '<div class="qzmeta"><span>Ścieżka '+(state.audioIdx+1)+' / '+list.length+'</span><span>'+pLabel(d.p)+' · '+d.cat+'</span></div>'+
+    '<div class="progress"><i style="width:'+((state.audioIdx+1)/list.length*100)+'%"></i></div>'+
+    '<div class="stage"><div class="fcard">'+
+      '<span class="badge p'+d.p+'">P'+d.p+'</span>'+
+      '<div class="fq">'+d.q+'</div>'+
+      (state.readAns?'<div class="fa" style="display:block"><div class="answer-inner">'+d.a+'</div></div>':'')+
+    '</div></div>'+
+    '<div class="controls">'+
+      '<button class="btn ghost" id="aprev">⏮ Poprzednie</button>'+
+      '<button class="btn primary" id="aplay">'+(state.audioPlaying?'⏸ Pauza':'▶ Odtwarzaj')+'</button>'+
+      '<button class="btn ghost" id="anext">Następne ⏭</button>'+
+    '</div>'+
+    (ttsSupported()?'':'<div class="warn" style="max-width:760px;margin:10px auto">Ta przeglądarka nie obsługuje czytania na głos. Otwórz plik w Chrome lub Microsoft Edge (mają polskie głosy).</div>');
+  populateVoices();
+  $('#rate').oninput=e=>{state.rate=parseFloat(e.target.value);const rv=$('#rateVal');if(rv)rv.textContent=state.rate+'×';};
+  $('#readAns').onchange=e=>{state.readAns=e.target.checked;const wasPlaying=state.audioPlaying;state.audioPlaying=false;stopSpeak();renderAudio();if(wasPlaying){state.audioPlaying=true;renderAudio();audioPlay();}};
+  $('#voiceSel').onchange=e=>{state.voice=e.target.value;};
+  $('#aprev').onclick=()=>{const wp=state.audioPlaying;stopSpeak();state.audioIdx=(state.audioIdx-1+list.length)%list.length;renderAudio();if(wp){state.audioPlaying=true;audioPlay();}};
+  $('#anext').onclick=()=>{const wp=state.audioPlaying;stopSpeak();state.audioIdx=(state.audioIdx+1)%list.length;renderAudio();if(wp){state.audioPlaying=true;audioPlay();}};
+  $('#aplay').onclick=()=>{ if(state.audioPlaying){state.audioPlaying=false;stopSpeak();renderAudio();} else {state.audioPlaying=true;renderAudio();audioPlay();} };
+}
+
 /* ---- render dispatcher ---- */
 function render(){
+  stopSpeak();state.audioPlaying=false;
   $('#browseView').style.display=state.mode==='browse'?'block':'none';
   $('#cardsView').style.display=state.mode==='cards'?'block':'none';
   $('#quizView').style.display=state.mode==='quiz'?'block':'none';
+  $('#audioView').style.display=state.mode==='audio'?'block':'none';
   if(state.mode==='browse')renderBrowse();
   else if(state.mode==='cards')renderCards();
-  else renderQuiz();
+  else if(state.mode==='quiz')renderQuiz();
+  else renderAudio();
 }
 
 /* ---- events ---- */
 $('#browseView').addEventListener('click',e=>{
   const card=e.target.closest('.card');if(!card)return;const id=+card.dataset.id;
+  if(e.target.classList.contains('speak')){const it=DATA.find(x=>x.id===id);const was=e.target.classList.contains('playing');stopSpeak();document.querySelectorAll('.mini.speak.playing').forEach(b=>b.classList.remove('playing'));if(!was&&it){e.target.classList.add('playing');speakText('Pytanie. '+stripHTML(it.q)+'. Odpowiedź. '+stripHTML(it.a),()=>{e.target.classList.remove('playing');});}return;}
   if(e.target.classList.contains('fav')){store.fav[id]=!store.fav[id];save();e.target.classList.toggle('on-fav');refreshStats();return;}
   if(e.target.classList.contains('known')){store.known[id]=!store.known[id];save();e.target.classList.toggle('on-known');card.classList.toggle('known');refreshStats();return;}
   card.classList.toggle('open');
 });
 document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');
-  state.mode=b.dataset.mode;state.idx=0;state.quizOrder=[];render();
+  state.mode=b.dataset.mode;state.idx=0;state.quizOrder=[];state.audioIdx=0;render();
 });
 $('#prioFilters').addEventListener('click',e=>{
   const c=e.target.closest('.chip');if(!c)return;
@@ -1178,7 +1280,7 @@ $('#themeBtn').onclick=()=>{const d=document.documentElement;const t=d.getAttrib
 $('#resetBtn').onclick=()=>{if(confirm('Wyczyścić cały postęp (opanowane i ulubione)?')){store={known:{},fav:{}};save();refreshStats();render();}};
 document.addEventListener('keydown',e=>{
   if(state.mode==='browse'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
-  if(e.code==='Space'){e.preventDefault();state.mode==='cards'?reveal():quizReveal();}
+  if(e.code==='Space'){e.preventDefault();if(state.mode==='cards')reveal();else if(state.mode==='quiz')quizReveal();else if(state.mode==='audio'){const b=$('#aplay');if(b)b.click();}}
   if(e.code==='ArrowRight'&&state.mode==='cards'){const l=filtered();state.idx=(state.idx+1)%l.length;renderCards();}
   if(e.code==='ArrowLeft'&&state.mode==='cards'){const l=filtered();state.idx=(state.idx-1+l.length)%l.length;renderCards();}
 });
@@ -1187,6 +1289,7 @@ document.addEventListener('keydown',e=>{
 (function init(){
   try{const t=localStorage.getItem('mag_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}
   DATA.forEach((d,i)=>{if(d.id==null)d.id=i+1;});
+  if(ttsSupported()){try{window.speechSynthesis.getVoices();window.speechSynthesis.onvoiceschanged=()=>{if(state.mode==='audio')populateVoices();};}catch(e){}}
   refreshStats();buildCatOptions();render();
 })();
 </script>
